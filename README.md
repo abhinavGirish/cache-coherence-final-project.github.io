@@ -1,4 +1,9 @@
-## Welcome to GitHub Pages
+## Parallelizing LSTM
+
+### Summary
+
+We are looking at 2-3 different approaches to parallelizing an LSTM that’s used for name classification. Specifically, we are planning on implementing the LSTM using AVX, CUDA and OpenMP, and doing a comparison of the performances of all methods.
+
 
 You can use the [editor on GitHub](https://github.com/abhinavGirish/parallel-lstm.github.io/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
 
