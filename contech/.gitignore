@@ -1,0 +1,10 @@
+*.o
+*.a
+*.bc
+*.pyc
+*.csv
+*.pdf
+*.o?????
+*.e?????
+nohup.out
+llvm/lib/Transforms/lib/
