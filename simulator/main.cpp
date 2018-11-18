@@ -26,6 +26,8 @@ int main(int argc, char **argv)
     po::positional_options_description p;
     p.add("tracefile", 1);
 
+    //messages for handling bad cmdline input, displaying
+    //cmdline options
     try
     {
         po::options_description desc("Options");
@@ -51,7 +53,6 @@ int main(int argc, char **argv)
             return 0;
         }
 
-
         po::notify(vm);
     }
     catch(std::exception &e)
@@ -64,16 +65,10 @@ int main(int argc, char **argv)
     struct stat info;
     if(stat(tracefile.c_str(), &info) !=0)
     {
-        std::cerr << "Could not open tracefle" << std::endl;
+        std::cerr << "Could not open tracefile" << std::endl;
         return -1;
     }
-    /*
-    int limit = -1;
-    if(argc >= 3)
-    {
-        limit = std::stoi(argv[2]);
-    }
-    */
+    
 
     CacheConfig config = {
         0, 
@@ -83,8 +78,11 @@ int main(int argc, char **argv)
         HIT_LATENCY,
         HIT_LATENCY
     };
+
+    /* run the simulation with the tracefile, cache configuration, region of interest, migratory
+       flags and limit on tasks to simulate*/
     Simulator sim(tracefile.c_str(), config, roi, limit, mig);
-    std::cout << "Initialization complete; begining simulation" << std::endl;
+    std::cout << "Initialization complete; beginning simulation" << std::endl;
 
     sim.run();
 

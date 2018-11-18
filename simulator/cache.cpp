@@ -145,7 +145,7 @@ void Cache::allocate(ParsedAddr parsed, size_t new_state)
 
 
 
-
+// gets the actions (memory operations) from a manager and does read/write
 void Cache::issue_new()
 {
     contech::Action action;
@@ -177,6 +177,8 @@ void Cache::event()
     {
         std::cout << "proc 0 " << "read hit remaining: " << read_hit_countdown.get_remaining() << ", write hit remaining: " << write_hit_countdown.get_remaining() << std::endl;
     }
+
+    // update the number of read/write hits 
     if(!read_hit_countdown.is_done())
     {
         if(read_hit_countdown.tick())

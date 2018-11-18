@@ -3,13 +3,14 @@
 
 #include "simulator.hpp"
 
-
 Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig)
     : table(OUTSANDING_REQUESTS), roi(roi), limit(limit)
 {
 
+    //initializing task graph with tracefile, task manager
     task_graph.reset(contech::TaskGraph::initFromFile(tracefile));
 
+    //setting task limits
     int task_limit = limit;
     int num_tasks = task_graph->getNumberOfTasks();
     if(limit == -1)
@@ -38,44 +39,33 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     }
 
 
+    // adding all the coherence managers for all of the processors in the system
     coherence_managers.reserve(config.nproc);
-    // if(mig)
-    // {
-        for(uint32_t i=0; i<config.nproc; i++)
-        {
-            coherence_managers.push_back(unique_ptr<CoherenceManagerInterface>(new MigratoryManager(&caches.at(i), i, config.nproc, table, mig)));
-        }
-        mem.reset(new MigMemory());
-    // }
 
-    /*
-    else
+    for(uint32_t i=0; i<config.nproc; i++)
     {
-        for(uint32_t i=0; i<config.nproc; i++)
-        {
-            coherence_managers.push_back(unique_ptr<CoherenceManagerInterface>(new MESIManager(&caches.at(i), i, config.nproc, table)));
-        }
-        mem.reset(new MESIMemory());
+            coherence_managers.push_back(unique_ptr<CoherenceManagerInterface>(new MigratoryManager(&caches.at(i), i, config.nproc, table, mig)));
     }
-    */
+    mem.reset(new MigMemory());
 
-
+    // sets the coherence manager field of the cache located on each processor
     for(uint32_t i=0; i<config.nproc; i++)
     {
         caches[i].set_coherence_manager(static_cast<CoherenceManagerInterface *>
             (&*coherence_managers.at(i)));
     }
 
+    // adding a receiver for every memory coherence manager
     std::vector<Receiver *> receivers;
     for(auto &m : coherence_managers)
     {
         receivers.push_back(dynamic_cast<Receiver*>(&*m));
     }
 
-
-
     receivers.push_back(dynamic_cast<Receiver*>(&*mem));
-
+    
+    // setting number of processors and receivers on bus
+    // connecting bus to coherence managers
     bus.set_nproc(config.nproc);
     bus.set_receivers(receivers);
     
@@ -85,18 +75,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     }
     mem->set_bus(&bus);
 
-    // if(mig)
-    // {
-        checker.reset(static_cast<ConsistencyCheckerInterface *>(
+    checker.reset(static_cast<ConsistencyCheckerInterface *>(
             new MIGConsistencyChecker(cache_refs, table, config)));
-    /*
-    }
-    else
-    {
-        checker.reset(static_cast<ConsistencyCheckerInterface *>(
-            new MESIConsistencyChecker(cache_refs, table, config)));
-    }
-    */
 }
 
 void Simulator::run(bool progbar)
@@ -159,7 +139,7 @@ void Simulator::run(bool progbar)
 }
 
 
-
+// runs a simulator event, equivalent to running an event for all the caches
 void Simulator::event()
 {
     if(done)
@@ -169,6 +149,8 @@ void Simulator::event()
     num_cycles++;
 
     uint32_t ndone = 0;
+
+    // simulate an event for all the caches in the system 
     for(auto &cache : caches)
     {
         if(cache.is_done())
@@ -183,11 +165,13 @@ void Simulator::event()
         }
     }
 
+    // update the coherence managers for all the caches
     for(auto &m : coherence_managers)
     {
         m->event();
     }
 
+    // update the bus and memory interface
     bus.event();
     mem->event();
 
