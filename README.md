@@ -2,7 +2,7 @@
 
 ### URL
 
-https://github.com/abhinavGirish/spandex-cache-coherence.github.io
+https://abhinavgirish.github.io/cache-coherence-final-project.github.io/
 
 ### Summary
 
