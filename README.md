@@ -1,4 +1,4 @@
-## Testing Cache Coherence Performance with the Spandex Protocol Enhancement
+## Testing Cache Coherence Performance with Different Interconnect Networks
 
 ### URL
 
