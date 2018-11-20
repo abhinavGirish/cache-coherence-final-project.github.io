@@ -44,3 +44,7 @@ We will be using Elliot Lockerman's project from 15-618 2 years ago. Since his s
 - Week 4: Extend the starter code to different interconnect networks
 - Week 5: Run tests on different traces to gather data
 - Week 6: Extend to the framework with other cache-coherence protocols and fix migratory cache coherence.
+
+### Checkpoint
+
+[Link](https://docs.google.com/document/d/1ElAP2HD-56tSKEJwdNr6il35JUB-fCGlqjlQtVjIaS4/edit?usp=sharing)
