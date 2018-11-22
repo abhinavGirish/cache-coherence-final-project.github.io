@@ -44,7 +44,7 @@ class Bus : public Event
 private:
     std::vector<Receiver*> receivers;
     std::queue<CMsg> incomming;
-    uint64_t num_messages;
+    uint64_t num_messages = 0;
     uint32_t nproc;
 
     Countdown delay;
