@@ -35,9 +35,9 @@ std::ostream &operator<<(std::ostream& os, const CMsgType &type)
 
 std::ostream &operator<<(std::ostream &os, const CMsg &msg)
 {
-    os << "CMsg {type: " << msg.type << ", sender: " << msg.sender 
-        << ", receiver: " << msg.receiver << ", addr: 0x" << std::hex 
-        << msg.addr << std::dec << ", flags: " << std::hex << msg.flags 
+    os << "CMsg {type: " << msg.type << ", sender: " << msg.sender
+        << ", receiver: " << msg.receiver << ", addr: 0x" << std::hex
+        << msg.addr << std::dec << ", flags: " << std::hex << msg.flags
         << std::dec << " }";
     return os;
 }
@@ -131,7 +131,7 @@ void Bus::event()
                 }
                 acks.reset(nproc-1);
             }
-        
+
         }
         else
         {
