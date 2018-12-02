@@ -11,6 +11,7 @@
 #include "cache.hpp"
 #include "mesi_consistency_checker.hpp"
 #include "bus.hpp"
+#include "crossbar.hpp"
 #include "coherence_manager_interface.hpp"
 #include "mesi_memory.hpp"
 #include "mig_memory.hpp"
@@ -33,6 +34,7 @@ private:
     std::vector<unique_ptr<CoherenceManagerInterface>> coherence_managers;
     RequestTable table;
     Bus bus;
+    Crossbar crossbar;
     unique_ptr<MemoryInterface> mem;
 
     uint64_t num_cycles = 0;
@@ -40,12 +42,12 @@ private:
     bool roi;
     int limit;
     unique_ptr<ConsistencyCheckerInterface> checker;
-
+    int interconnect;
     bool done = false;
 
 
 public:
-    Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig);
+    Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect);
 
     void run(bool progbar);
     void run() { run(true); }

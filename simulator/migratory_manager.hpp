@@ -9,6 +9,7 @@
 #include "cache.hpp"
 #include "event.hpp"
 #include "bus.hpp"
+#include "crossbar.hpp"
 #include "coherence_manager_interface.hpp"
 #include "coherence_manager_misc.hpp"
 #include "mig_memory.hpp"
@@ -46,7 +47,12 @@ private:
     uint32_t proc;
     uint32_t nproc;
 
+    int counter = 0;
+
     Bus *bus;
+    Crossbar *crossbar;
+    int interconnect;
+
     std::queue<CMsg> incomming;
     std::queue<CMsg> incomming_temp;
     bool swap;
@@ -66,8 +72,8 @@ private:
 public:
     MigratoryManager(Cache *cache, uint32_t proc, uint32_t nproc, RequestTable &request_table, bool do_mig);
 
-    void set_bus(Bus *bus) { this->bus = bus; }
-
+    void set_bus(Bus *bus) { interconnect = 0; this->bus = bus; }
+    void set_crossbar(Crossbar *crossbar) { interconnect = 1; this->crossbar = crossbar; }
 
     void event();
     void receive(CMsg msg) { incomming.push(msg); }

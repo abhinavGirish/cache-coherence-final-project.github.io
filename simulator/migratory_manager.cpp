@@ -10,9 +10,9 @@
 
 
 
-MigratoryManager::MigratoryManager(Cache *cache, uint32_t proc, uint32_t nproc, RequestTable &request_table, bool do_mig) 
-    : cache(cache), proc(proc), nproc(nproc), request_table(request_table), 
-        do_mig(do_mig) 
+MigratoryManager::MigratoryManager(Cache *cache, uint32_t proc, uint32_t nproc, RequestTable &request_table, bool do_mig)
+    : cache(cache), proc(proc), nproc(nproc), request_table(request_table),
+        do_mig(do_mig)
 {
     pending_request.type = CMsgType::none;
 }
@@ -44,7 +44,7 @@ void MigratoryManager::recv_busRd(CMsg &msg)
     }
 
     Line *line;
-    bool found = cache->find_line(msg.addr, &line); 
+    bool found = cache->find_line(msg.addr, &line);
 
     size_t flags = 0;
     if(found)
@@ -81,11 +81,11 @@ void MigratoryManager::recv_busRd(CMsg &msg)
             case MigCohState::MIGRATORY_CLEAN:
                 if(do_mig)
                 {
-                    line->state = MigCohState::SHARED2;   
+                    line->state = MigCohState::SHARED2;
                 }
                 else
                 {
-                    line->state = MigCohState::SHARED;   
+                    line->state = MigCohState::SHARED;
                 }
                 flags |= MigBusFlag::SHARED;
                 break;
@@ -109,8 +109,12 @@ void MigratoryManager::recv_busRd(CMsg &msg)
         msg.addr,
         flags | (found & line->most_recent & MigBusFlag::TRANSMIT)
     };
-    bus->send_ack(out);
-    
+    if(interconnect == 1){
+        crossbar->send_ack(out);
+    }
+    else{
+        bus->send_ack(out);
+    }
 
     if(found && line->most_recent)
     {
@@ -121,7 +125,12 @@ void MigratoryManager::recv_busRd(CMsg &msg)
             msg.addr,
             1
         };
-        bus->broadcast(data);
+        if(interconnect == 1){
+            crossbar->broadcast(data);
+        }
+        else{
+            bus->broadcast(data);
+        }
     }
     if(found)
     {
@@ -144,7 +153,7 @@ void MigratoryManager::recv_busRdX(CMsg &msg)
 
 
     Line *line;
-    bool found = cache->find_line(msg.addr, &line); 
+    bool found = cache->find_line(msg.addr, &line);
 
     size_t flags = 0;
     if(found)
@@ -196,8 +205,12 @@ void MigratoryManager::recv_busRdX(CMsg &msg)
         msg.addr,
         flags | (found & line->most_recent & MigBusFlag::TRANSMIT)
     };
-    bus->send_ack(out);
-    
+    if(interconnect == 1){
+        crossbar->send_ack(out);
+    }
+    else{
+        bus->send_ack(out);
+    }
 
     if(found && line->most_recent)
     {
@@ -208,7 +221,12 @@ void MigratoryManager::recv_busRdX(CMsg &msg)
             msg.addr,
             1
         };
-        bus->broadcast(data);
+        if(interconnect == 1){
+            crossbar->broadcast(data);
+        }
+        else{
+            bus->broadcast(data);
+        }
     }
     if(found)
     {
@@ -245,7 +263,7 @@ void MigratoryManager::recv_data(CMsg &msg)
         && msg.receiver == proc)
     {
         pending_request.got_data = true;
-    }  
+    }
 }
 
 void MigratoryManager::handle_incomming()
@@ -312,7 +330,7 @@ void MigratoryManager::handle_pending_request()
             case CMsgType::busRdX:
                 write(pending_request.addr);
                 break;
-            
+
             case CMsgType::data:
             case CMsgType::ack:
             case CMsgType::none:
@@ -322,12 +340,14 @@ void MigratoryManager::handle_pending_request()
         }
     }
     // If the pending request is complete
-    else if(!pending_reissue 
-        && pending_request.type != CMsgType::none 
+    else if(!pending_reissue
+        && pending_request.type != CMsgType::none
         && pending_request.needed_acks <= 0
         && pending_request.got_data)
     {
-        // std::cout << "proc " << proc << " completex request" << std::endl;
+         //std::cout << "proc " << proc << " completex request" << counter << std::endl;
+        counter++; // for debugging purposes only
+
         switch(pending_request.type)
         {
             case CMsgType::busRd:
@@ -346,7 +366,9 @@ void MigratoryManager::handle_pending_request()
                 {
                     new_state = MigCohState::EXCLUSIVE;
                 }
-
+                if(interconnect == 1){
+                    crossbar->add_to_directory(pending_request.addr, proc);
+                }
                 cache->complete_read(pending_request.addr, new_state);
                 break;
             }
@@ -378,7 +400,7 @@ void MigratoryManager::handle_pending_request()
                     {
                         new_state = MigCohState::MIGRATORY_DIRTY;
                     }
-                    else 
+                    else
                     {
                         assert(false);
                     }
@@ -394,7 +416,9 @@ void MigratoryManager::handle_pending_request()
                         new_state = MigCohState::DIRTY;
                     }
                 }
-                
+                if(interconnect == 1){
+                    crossbar->set_new_directory(pending_request.addr, proc);
+                }
                 cache->complete_write(pending_request.addr, new_state);
                 break;
             }
@@ -404,7 +428,7 @@ void MigratoryManager::handle_pending_request()
                 // Should never happen
                 assert(false);
                 break;
-  
+
         }
 
         request_table.del(pending_request.tag);
@@ -422,11 +446,17 @@ void MigratoryManager::handle_pending_request()
 
 void MigratoryManager::read(uint64_t addr)
 {
-
+    uint32_t acks = nproc - 1;
+    if(interconnect == 1){
+        assert(crossbar->check_directory(addr));
+        acks = crossbar->num_proc(addr);
+        if(crossbar->is_set(addr,proc))
+            acks--;
+    }
     pending_request = {
         CMsgType::busRd,
         addr,
-        nproc - 1,
+        acks,
         -1,
         false,
         false,
@@ -454,17 +484,27 @@ void MigratoryManager::read(uint64_t addr)
         addr,
         0
     };
-    bus->broadcast(msg);
+    if(interconnect == 1){
+        crossbar->broadcast(msg);
+    }
+    else{
+        bus->broadcast(msg);
+    }
 }
 
 
 void MigratoryManager::write(uint64_t addr)
 {
-
+    uint32_t acks = nproc - 1;
+    if(interconnect == 1){
+        acks = crossbar->num_proc(addr);
+        if(crossbar->is_set(addr,proc))
+            acks--;
+    }
     pending_request = {
         CMsgType::busRdX,
         addr,
-        nproc - 1,
+        acks,
         -1,
         false,
         false,
@@ -485,7 +525,7 @@ void MigratoryManager::write(uint64_t addr)
     }
     pending_reissue = false;
 
-    
+
     CMsg msg = {
         CMsgType::busRdX,
         proc,
@@ -493,7 +533,12 @@ void MigratoryManager::write(uint64_t addr)
         addr,
         0
     };
-    bus->broadcast(msg);
+    if(interconnect == 1){
+        crossbar->broadcast(msg);
+    }
+    else{
+        bus->broadcast(msg);
+    }
 }
 
 
@@ -553,7 +598,7 @@ size_t MigratoryManager::rw_upgrade_state(size_t state)
 
 void MigratoryManager::print(std::ostream &os)
 {
-    os << "CM " << this->proc << " "; 
+    os << "CM " << this->proc << " ";
 
     if(this->pending_reissue)
     {

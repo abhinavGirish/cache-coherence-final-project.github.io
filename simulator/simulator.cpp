@@ -3,7 +3,7 @@
 
 #include "simulator.hpp"
 
-Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig)
+Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect)
     : table(OUTSANDING_REQUESTS), roi(roi), limit(limit)
 {
 
@@ -23,6 +23,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
         task_limit = -1;
     }
 
+    this->interconnect = interconnect;
+
     config.nproc = task_graph->getNumberOfContexts();
 
     manager.reset(new TaskManager(*task_graph, roi, task_limit));
@@ -33,9 +35,11 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
         caches.push_back(Cache(*manager, i, config));
     }
     std::vector<Cache *> cache_refs;
+    //std::vector<Cache *> cache_refs2;
     for(auto &cache : caches)
     {
         cache_refs.push_back(&cache);
+        //cache_refs2.push_back(&cache);
     }
 
 
@@ -63,27 +67,43 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     }
 
     receivers.push_back(dynamic_cast<Receiver*>(&*mem));
-    
+
     // setting number of processors and receivers on bus
     // connecting bus to coherence managers
-    bus.set_nproc(config.nproc);
-    bus.set_receivers(receivers);
-    
-    for(auto &m : coherence_managers)
-    {
-        m->set_bus(&bus);
-    }
-    mem->set_bus(&bus);
 
+    if(interconnect == 1){
+        crossbar.set_nproc(config.nproc);
+        crossbar.set_receivers(receivers);
+
+        for(auto &m : coherence_managers)
+        {
+            m->set_crossbar(&crossbar);
+        }
+
+        crossbar.set_cache_refs(cache_refs);
+
+        mem->set_crossbar(&crossbar);
+
+    }
+    else{
+        bus.set_nproc(config.nproc);
+        bus.set_receivers(receivers);
+
+        for(auto &m : coherence_managers)
+        {
+            m->set_bus(&bus);
+        }
+        mem->set_bus(&bus);
+    }
     checker.reset(static_cast<ConsistencyCheckerInterface *>(
             new MIGConsistencyChecker(cache_refs, table, config)));
 }
 
 void Simulator::run(bool progbar)
-{   
+{
     // ProgressBar bar(limit);
     // uint32_t pos = -1;
-    
+
     // int stop = 0;
     // bus.log_on();
 
@@ -97,9 +117,9 @@ void Simulator::run(bool progbar)
             if(pos != manager->get_count())
             {
                 pos = manager->get_count();
-                bar.set(pos); 
+                bar.set(pos);
             }
-            
+
         }
         */
         // if(stop++ > 1000)
@@ -150,7 +170,7 @@ void Simulator::event()
 
     uint32_t ndone = 0;
 
-    // simulate an event for all the caches in the system 
+    // simulate an event for all the caches in the system
     for(auto &cache : caches)
     {
         if(cache.is_done())
@@ -172,7 +192,12 @@ void Simulator::event()
     }
 
     // update the bus and memory interface
-    bus.event();
+    if(interconnect==1){
+        crossbar.event();
+    }
+    else{
+        bus.event();
+    }
     mem->event();
 
 
@@ -180,7 +205,7 @@ void Simulator::event()
     {
         done = true;
     }
-    
+
 }
 
 void Simulator::check()

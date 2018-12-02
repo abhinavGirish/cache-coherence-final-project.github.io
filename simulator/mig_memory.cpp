@@ -19,8 +19,12 @@ void MigMemory::event()
                 it->first,
                 MigBusFlag::SHARED,
             };
-            bus->broadcast(msg);
-
+            if(interconnect == 1){
+                crossbar->broadcast(msg);
+            }
+            else{
+                bus->broadcast(msg);
+            }
             table.erase(it++);
         }
         else
@@ -39,7 +43,7 @@ void MigMemory::event()
             case CMsgType::busRdX:
             {
                 // Start the read, just in case
-                PendingMemOp op = 
+                PendingMemOp op =
                 {
                     Countdown(latency),
                     msg.sender

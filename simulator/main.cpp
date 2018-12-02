@@ -10,7 +10,7 @@
 
 
 const int BLOCK_BITS  = 6; // 64 bytes
-const int SET_BITS    = 9; 
+const int SET_BITS    = 9;
 const int NUM_LINES   = 8; // 8 lines per set
 const int HIT_LATENCY = 11;
 
@@ -23,6 +23,7 @@ int main(int argc, char **argv)
     int limit;
     bool roi;
     bool mig;
+    int interconnect;
     po::positional_options_description p;
     p.add("tracefile", 1);
 
@@ -33,7 +34,7 @@ int main(int argc, char **argv)
         po::options_description desc("Options");
         desc.add_options()
             ("help", "produce help message")
-            ("tracefile", po::value<std::string>(&tracefile)->required(), 
+            ("tracefile", po::value<std::string>(&tracefile)->required(),
                 "trace file to simulate")
             ("limit,l", po::value<int>(&limit)->default_value(-1),
                 "limit number of tasks to simulate")
@@ -41,6 +42,7 @@ int main(int argc, char **argv)
                 "only simulate Region Of Interest")
             ("mig", po::bool_switch(&mig)->default_value(false),
                 "use migratory coherence manager")
+            ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar")
         ;
 
         po::variables_map vm;
@@ -68,10 +70,10 @@ int main(int argc, char **argv)
         std::cerr << "Could not open tracefile" << std::endl;
         return -1;
     }
-    
+
 
     CacheConfig config = {
-        0, 
+        0,
         BLOCK_BITS,
         SET_BITS,
         NUM_LINES,
@@ -81,7 +83,7 @@ int main(int argc, char **argv)
 
     /* run the simulation with the tracefile, cache configuration, region of interest, migratory
        flags and limit on tasks to simulate*/
-    Simulator sim(tracefile.c_str(), config, roi, limit, mig);
+    Simulator sim(tracefile.c_str(), config, roi, limit, mig, interconnect);
     std::cout << "Initialization complete; beginning simulation" << std::endl;
 
     sim.run();
@@ -96,6 +98,6 @@ int main(int argc, char **argv)
     std::cout << "cycles: " << sim.get_cycles() << std::endl;
     std::cout << "num messages: " << sim.get_num_messages() << std::endl;
     std::cout << std::endl;
-    
+
     return 0;
 }

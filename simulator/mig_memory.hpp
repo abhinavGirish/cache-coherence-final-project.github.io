@@ -8,6 +8,7 @@
 #include <climits>
 
 #include "bus.hpp"
+#include "crossbar.hpp"
 #include "countdown.hpp"
 #include "event.hpp"
 #include "mig_const.hpp"
@@ -27,16 +28,19 @@ private:
 
     uint32_t latency = 100;
     Bus *bus;
+    Crossbar *crossbar;
+    int interconnect;
     std::queue<CMsg> incomming;
     std::map<uint64_t, PendingMemOp> table;
 
 public:
-    MigMemory() {} 
+    MigMemory() {}
     MigMemory(uint32_t latency) : latency(latency) {}
     MigMemory(uint32_t latency, Bus *bus) : latency(latency), bus(bus) { }
 
     void set_latency(uint32_t latency) { this->latency = latency; }
-    void set_bus(Bus *bus) { this->bus = bus; }
+    void set_bus(Bus *bus) {interconnect = 0; this->bus = bus;}
+    void set_crossbar(Crossbar *crossbar) {interconnect = 1; this->crossbar = crossbar;}
     void receive(CMsg msg) { incomming.push(msg); }
     void event();
 };
