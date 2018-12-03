@@ -44,23 +44,32 @@ public:
 const int BUS_DLY = 10;
 */
 
+struct subinterconnect
+{
+    std::queue<CMsg> incomming;
+    Countdown delay;
+};
+
 class Crossbar : public Event
 {
 private:
     std::vector<Receiver*> receivers;
-    std::queue<CMsg> incomming;
+    //std::queue<CMsg> incomming;
+    std::vector<subinterconnect> interconnects;
     uint64_t num_messages = 0;
     uint32_t nproc;
     std::vector<Cache *> cache_refs;
     std::map<uint64_t,uint64_t> directory;
 
-    Countdown delay;
-    Countdown acks;
+    //Countdown delay;
+    //Countdown acks;
     bool logging = false;
 
 public:
     Crossbar() {} ;
     Crossbar(std::vector<Receiver*> receivers) : receivers(receivers) {}
+
+    void init_interconnect(){ interconnects.resize((nproc+1)*(nproc+1)); }
 
     void set_nproc(uint32_t nproc) { this->nproc = nproc; }
     void set_receivers(std::vector<Receiver*> receivers) { this->receivers = receivers; }
@@ -74,6 +83,7 @@ public:
     void set_new_directory(uint64_t addr, uint32_t proc){ directory[addr] = 0x1 << proc;}
     void event();
     void broadcast(CMsg msg);
+    void send(CMsg msg);
     void send_ack(CMsg msg);
     void log_on() { logging = true; }
     void log_off() { logging = false; }

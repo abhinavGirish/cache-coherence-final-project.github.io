@@ -74,7 +74,7 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     if(interconnect == 1){
         crossbar.set_nproc(config.nproc);
         crossbar.set_receivers(receivers);
-
+        crossbar.init_interconnect();
         for(auto &m : coherence_managers)
         {
             m->set_crossbar(&crossbar);

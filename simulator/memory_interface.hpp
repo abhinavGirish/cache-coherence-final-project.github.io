@@ -12,6 +12,7 @@ class MemoryInterface : public Event, public Receiver
 public:
     virtual void set_latency(uint32_t latency) = 0;
     virtual void set_bus(Bus *bus) = 0;
+    virtual void set_crossbar(Crossbar *crossbar) = 0;
     virtual void receive(CMsg msg) = 0;
     virtual void event() = 0;
 };

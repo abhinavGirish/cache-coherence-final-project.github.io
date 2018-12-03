@@ -345,7 +345,7 @@ void MigratoryManager::handle_pending_request()
         && pending_request.needed_acks <= 0
         && pending_request.got_data)
     {
-         //std::cout << "proc " << proc << " completex request" << counter << std::endl;
+        //std::cout << "proc " << proc << " completex request" << counter << std::endl;
         counter++; // for debugging purposes only
 
         switch(pending_request.type)

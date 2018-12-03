@@ -8,6 +8,7 @@
 #include <climits>
 #include <iostream>
 
+#include "crossbar.hpp"
 #include "bus.hpp"
 #include "countdown.hpp"
 #include "event.hpp"
@@ -32,7 +33,7 @@ private:
     std::map<uint64_t, PendingMemOp> table;
 
 public:
-    MESIMemory() {} 
+    MESIMemory() {}
     MESIMemory(uint32_t latency) : latency(latency) {}
     MESIMemory(uint32_t latency, Bus *bus) : latency(latency), bus(bus) { }
 

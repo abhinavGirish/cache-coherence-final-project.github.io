@@ -5,6 +5,7 @@
 #include <string>
 
 class Bus;
+class Crossbar;
 
 class CoherenceManagerInterface : public Event
 {
@@ -22,10 +23,11 @@ public:
     virtual size_t rw_upgrade_state(size_t state) = 0;
 
     virtual void set_bus(Bus *bus) = 0;
+    virtual void set_crossbar(Crossbar *crossbar) = 0;
 
     virtual void event() = 0;
 
-    virtual void print(ostream &os) = 0;    
+    virtual void print(ostream &os) = 0;
 
     virtual void log_on() = 0;
     virtual void log_off() = 0;

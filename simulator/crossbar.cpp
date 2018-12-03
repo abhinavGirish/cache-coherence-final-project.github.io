@@ -4,6 +4,8 @@
 
 #include "crossbar.hpp"
 #include "bus.hpp"
+#include "mig_const.hpp"
+#include "mig_memory.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
 // CMsg
@@ -52,10 +54,29 @@ std::ostream &operator<<(std::ostream &os, const CMsg &msg)
 
 void Crossbar::broadcast(CMsg msg)
 {
-    num_messages++;
-    // std::cout << "bus got " << msg << std::endl;
     assert(check_directory(msg.addr));
-    incomming.push(msg);
+    if(msg.type == CMsgType::busRd || msg.type == CMsgType::busRdX){
+        msg.receiver = nproc;
+        send(msg);//receivers[nproc]->receive(msg);
+        uint64_t current_state = get_directory_info(msg.addr);
+        for(size_t i=0;i<nproc;i++){
+            if(current_state & 0x1 && i!=msg.sender){
+                msg.receiver = i;
+                send(msg);//receivers[i]->receive(msg);
+            }
+        current_state = current_state>>1;
+        }
+    }
+    else{
+        if(msg.sender==MEM)
+            msg.sender=nproc;
+        send(msg);
+    }
+}
+
+void Crossbar::send(CMsg msg){
+    num_messages++;
+    interconnects[msg.sender*(nproc+1) + msg.receiver].incomming.push(msg);
 }
 
 void Crossbar::send_ack(CMsg msg)
@@ -64,107 +85,40 @@ void Crossbar::send_ack(CMsg msg)
     {
         migratory++;
     }
-    if(logging)
-    {
-        std::cout << "bus ack fast path " << msg << std::endl;
-    }
-    acks.tick();
+    //acks.tick();
     assert(check_directory(msg.addr));
-    receivers[msg.receiver]->receive(msg);
-    receivers[nproc]->receive(msg);
+    broadcast(msg);//incomming.push(msg);
+    if(msg.flags & MigBusFlag::TRANSMIT){
+        msg.receiver = nproc;
+        broadcast(msg);//incomming.push(msg);
+    }
+    //receivers[msg.receiver]->receive(msg);
+    //receivers[nproc]->receive(msg);
 }
 
 void Crossbar::event()
 {
-    if(delay.is_done())
+  bool test = false;
+  for(size_t i=0;i<(nproc+1)*(nproc+1);i++){
+    if(interconnects[i].delay.is_done())
     {
-        if(acks.is_done())
-        {
-            if(incomming.size() > 0)
+            if(interconnects[i].incomming.size() > 0)
             {
-                if(logging)
-                {
-                    std::cout << "bus reseting delay for next" << std::endl;
-                }
-                delay.reset(BUS_DLY);
+                interconnects[i].delay.reset(BUS_DLY);
             }
-            else
-            {
-                if(logging)
-                {
-                    std::cout << "bus waiting" << std::endl;
-                }
-            }
-        }
-        else
-        {
-            if(logging)
-            {
-                std::cout << "bus waiting for acks: " << acks.get_remaining() << std::endl;
-            }
-        }
     }
     else
     {
-
-        if(delay.tick())
+        if(interconnects[i].delay.tick())
         {
-            if(logging)
-            {
-                std::cout << "bus delaying done" << std::endl;
-            }
-            CMsg msg = incomming.front();
+            CMsg msg = interconnects[i].incomming.front();
             assert(check_directory(msg.addr));
-            /*if(msg.type == CMsgType::busRd){
-                add_to_directory(msg.addr,msg.sender);
-            }
-            else if(msg.type == CMsgType::busRdX){
-                set_new_directory(msg.addr,msg.sender);
-            }*/
-            incomming.pop();
-            /*for(auto recv : receivers)
-            {
-                recv->receive(msg);
-            }*/
-            size_t acks_needed = 0;
-            if(msg.type == CMsgType::busRd || msg.type == CMsgType::busRdX){
-                receivers[nproc]->receive(msg);
-                uint64_t current_state = get_directory_info(msg.addr);
-                for(size_t i=0;i<nproc;i++){
-                    if(current_state & 0x1 && i!=msg.sender){
-                        receivers[i]->receive(msg);
-                        acks_needed++;
-                    }
-                    current_state = current_state>>1;
-                }
-            }
-            else{
-                assert(msg.receiver < nproc);
-                receivers[msg.receiver]->receive(msg);
-            }
-            if(logging)
-            {
-                std::cout << "bus broadcasting " << msg << std::endl;
-            }
-
-            if(msg.type == CMsgType::busRd || msg.type == CMsgType::busRdX)
-            {
-                if(logging)
-                {
-                    std::cout << "bus waiting for acks" << std::endl;
-                }
-                acks.reset(acks_needed);
-            }
-
-        }
-        else
-        {
-            if(logging)
-            {
-                std::cout << "bus delay tick" << std::endl;
-            }
+            interconnects[i].incomming.pop();
+            assert(msg.receiver <= nproc);
+            receivers[msg.receiver]->receive(msg);
         }
     }
+  }
 }
 
 
