@@ -85,6 +85,17 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
         mem->set_crossbar(&crossbar);
 
     }
+    else if(interconnect == 2){
+        ring.set_nproc(config.nproc);
+        ring.set_receivers(receivers);
+        ring.init_interconnect();
+        for(auto &m : coherence_managers)
+        {
+            m->set_ring(&ring);
+        }
+        ring.set_cache_refs(cache_refs);
+        mem->set_ring(&ring);
+    }
     else{
         bus.set_nproc(config.nproc);
         bus.set_receivers(receivers);
@@ -194,6 +205,9 @@ void Simulator::event()
     // update the bus and memory interface
     if(interconnect==1){
         crossbar.event();
+    }
+    else if(interconnect ==2){
+        ring.event();
     }
     else{
         bus.event();

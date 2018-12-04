@@ -9,6 +9,7 @@
 
 #include "bus.hpp"
 #include "crossbar.hpp"
+#include "ring.hpp"
 #include "countdown.hpp"
 #include "event.hpp"
 #include "mig_const.hpp"
@@ -29,6 +30,7 @@ private:
     uint32_t latency = 100;
     Bus *bus;
     Crossbar *crossbar;
+    Ring *ring;
     int interconnect;
     std::queue<CMsg> incomming;
     std::map<uint64_t, PendingMemOp> table;
@@ -41,6 +43,7 @@ public:
     void set_latency(uint32_t latency) { this->latency = latency; }
     void set_bus(Bus *bus) {interconnect = 0; this->bus = bus;}
     void set_crossbar(Crossbar *crossbar) {interconnect = 1; this->crossbar = crossbar;}
+    void set_ring(Ring *ring) {interconnect = 2; this->ring = ring;}
     void receive(CMsg msg) { incomming.push(msg); }
     void event();
 };

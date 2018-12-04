@@ -12,6 +12,7 @@
 #include "mesi_consistency_checker.hpp"
 #include "bus.hpp"
 #include "crossbar.hpp"
+#include "ring.hpp"
 #include "coherence_manager_interface.hpp"
 #include "mesi_memory.hpp"
 #include "mig_memory.hpp"
@@ -35,6 +36,7 @@ private:
     RequestTable table;
     Bus bus;
     Crossbar crossbar;
+    Ring ring;
     unique_ptr<MemoryInterface> mem;
 
     uint64_t num_cycles = 0;

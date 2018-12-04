@@ -22,6 +22,9 @@ void MigMemory::event()
             if(interconnect == 1){
                 crossbar->broadcast(msg);
             }
+            else if(interconnect == 2){
+                ring->broadcast(msg);
+            }
             else{
                 bus->broadcast(msg);
             }

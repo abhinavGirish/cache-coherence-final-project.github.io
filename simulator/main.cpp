@@ -42,7 +42,7 @@ int main(int argc, char **argv)
                 "only simulate Region Of Interest")
             ("mig", po::bool_switch(&mig)->default_value(false),
                 "use migratory coherence manager")
-            ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar")
+            ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar, 2 - ring")
         ;
 
         po::variables_map vm;

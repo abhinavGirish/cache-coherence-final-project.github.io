@@ -6,6 +6,7 @@
 
 class Bus;
 class Crossbar;
+class Ring;
 
 class CoherenceManagerInterface : public Event
 {
@@ -24,6 +25,7 @@ public:
 
     virtual void set_bus(Bus *bus) = 0;
     virtual void set_crossbar(Crossbar *crossbar) = 0;
+    virtual void set_ring(Ring *ring) = 0;
 
     virtual void event() = 0;
 
