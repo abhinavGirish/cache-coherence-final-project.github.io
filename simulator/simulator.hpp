@@ -58,7 +58,7 @@ public:
     CacheStats get_stats();
     void check();
     uint64_t get_cycles() { return num_cycles; }
-    uint64_t get_num_messages() { return bus.get_num_messages(); }
+    uint64_t get_num_messages();
     bool is_roi() { return roi; }
 };
 

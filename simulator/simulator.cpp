@@ -237,3 +237,13 @@ CacheStats Simulator::get_stats()
 
     return stats;
 }
+
+uint64_t Simulator::get_num_messages() {
+    if(interconnect == 1)
+        return crossbar.get_num_messages();
+    else if(interconnect == 2)
+        return ring.get_num_messages();
+    else
+        return bus.get_num_messages();
+}
+
