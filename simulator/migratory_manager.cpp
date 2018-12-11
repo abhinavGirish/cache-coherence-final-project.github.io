@@ -115,6 +115,9 @@ void MigratoryManager::recv_busRd(CMsg &msg)
     else if(interconnect == 2){
         ring->send_ack(out);
     }
+    else if(interconnect == 3){
+        mesh->send_ack(out);
+    }
     else{
         bus->send_ack(out);
     }
@@ -133,6 +136,9 @@ void MigratoryManager::recv_busRd(CMsg &msg)
         }
         else if(interconnect == 2){
             ring->broadcast(data);
+        }
+        else if(interconnect == 3){
+            mesh->broadcast(data);
         }
         else{
             bus->broadcast(data);
@@ -217,6 +223,9 @@ void MigratoryManager::recv_busRdX(CMsg &msg)
     else if(interconnect == 2){
         ring->send_ack(out);
     }
+    else if(interconnect == 3){
+        mesh->send_ack(out);
+    }
     else{
         bus->send_ack(out);
     }
@@ -235,6 +244,9 @@ void MigratoryManager::recv_busRdX(CMsg &msg)
         }
         else if(interconnect == 2){
             ring->broadcast(data);
+        }
+        else if(interconnect == 3){
+            mesh->broadcast(data);
         }
         else{
             bus->broadcast(data);
@@ -384,6 +396,9 @@ void MigratoryManager::handle_pending_request()
                 else if(interconnect == 2){
                     ring->add_to_directory(pending_request.addr, proc);
                 }
+                else if(interconnect == 3){
+                    mesh->add_to_directory(pending_request.addr, proc);
+                }
                 cache->complete_read(pending_request.addr, new_state);
                 break;
             }
@@ -437,6 +452,9 @@ void MigratoryManager::handle_pending_request()
                 else if(interconnect == 2){
                     ring->set_new_directory(pending_request.addr, proc);
                 }
+                else if(interconnect == 3){
+                    mesh->set_new_directory(pending_request.addr, proc);
+                }
                 cache->complete_write(pending_request.addr, new_state);
                 break;
             }
@@ -477,6 +495,12 @@ void MigratoryManager::read(uint64_t addr)
         if(ring->is_set(addr,proc))
             acks--;
     }
+    else if(interconnect == 3){
+        assert(mesh->check_directory(addr));
+        acks = mesh->num_proc(addr);
+        if(mesh->is_set(addr,proc))
+            acks--;
+    }
     pending_request = {
         CMsgType::busRd,
         addr,
@@ -514,6 +538,9 @@ void MigratoryManager::read(uint64_t addr)
     else if(interconnect == 2){
         ring->broadcast(msg);
     }
+    else if(interconnect == 3){
+        mesh->broadcast(msg);
+    }
     else{
         bus->broadcast(msg);
     }
@@ -531,6 +558,11 @@ void MigratoryManager::write(uint64_t addr)
     else if(interconnect == 2){
         acks = ring->num_proc(addr);
         if(ring->is_set(addr,proc))
+            acks--;
+    }
+    else if(interconnect == 3){
+        acks = mesh->num_proc(addr);
+        if(mesh->is_set(addr,proc))
             acks--;
     }
     pending_request = {
@@ -570,6 +602,9 @@ void MigratoryManager::write(uint64_t addr)
     }
     else if(interconnect == 2){
         ring->broadcast(msg);
+    }
+    else if(interconnect == 3){
+        mesh->broadcast(msg);
     }
     else{
         bus->broadcast(msg);

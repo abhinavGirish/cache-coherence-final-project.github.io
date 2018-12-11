@@ -8,11 +8,11 @@
 #include "mig_memory.hpp"
 
 ////////////////////////////////////////////////////////////////////////////////
-// Ring
+// Mesh
 ////////////////////////////////////////////////////////////////////////////////
 
 
-void Ring::broadcast(CMsg msg)
+void Mesh::broadcast(CMsg msg)
 {
     assert(check_directory(msg.addr));
     if(msg.type == CMsgType::busRd || msg.type == CMsgType::busRdX){
@@ -34,14 +34,14 @@ void Ring::broadcast(CMsg msg)
     }
 }
 
-void Ring::send(CMsg msg){
+void Mesh::send(CMsg msg){
     num_messages++;
     if(interconnects[msg.sender].incomming.size()>0)
         contentions++;
     interconnects[msg.sender].incomming.push(msg);
 }
 
-void Ring::send_ack(CMsg msg)
+void Mesh::send_ack(CMsg msg)
 {
     if(msg.flags & 0x2)
     {
@@ -55,7 +55,7 @@ void Ring::send_ack(CMsg msg)
     }
 }
 
-void Ring::event()
+void Mesh::event()
 {
   for(size_t i=0;i<nproc+1;i++){
     if(interconnects[i].delay.is_done())
@@ -72,58 +72,44 @@ void Ring::event()
             CMsg msg = interconnects[i].incomming.front();
             assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
-            int index = i;
-            int left_index;
-            int right_index;
-            if(index-1<0){
-                left_index = nproc;
-            }
-            else{
-                left_index = index -1;
-            }
-            if(index+1>nproc){
-                right_index = 0;
-            }
-            else{
-                right_index = index + 1;
-            }
-            if(left_index == msg.receiver || right_index == msg.receiver){
+            int c_x = i%length;
+            int c_y = i/length;
+            int e_x = msg.receiver%length;
+            int e_y = msg.receiver/length;
+            int n_x = c_x;
+            int n_y = c_y;
+            if(c_x<e_x)
+                n_x++;
+            else if(c_x>e_x)
+                n_x--;
+            if(c_y<e_y)
+                n_y++;
+            else if(c_y>e_y)
+                n_y = c_y - 1;
+            if(n_x == e_x && n_y == e_y){
                 assert(msg.receiver <= nproc);
-                std::cout << "REACHED END" << std::endl;
+                //std::cout << "REACHED THE END" << std::endl;
                 receivers[msg.receiver]->receive(msg);
             }
             else{
-                int right_distance;
-                int left_distance;
-                if(index < msg.receiver){
-                    right_distance = msg.receiver - index;
-                    left_distance = index + (nproc+1 - msg.receiver);
+                size_t h_index = c_y*length + n_x;
+                size_t v_index = n_y*length + c_x;
+                int h_size = -1;
+                int v_size = -1;
+                if(h_index != i && h_index < (nproc+1))
+                    h_size = interconnects[h_index].incomming.size();
+                if(v_index != i && v_index < (nproc+1))
+                    v_size = interconnects[v_index].incomming.size();
+                assert(v_size != -1 || h_size != -1);
+                if(v_size == -1 || (h_size != -1 && h_size<v_size)){
+                    if(h_size > 0)
+                        contentions++;
+                    interconnects[h_index].incomming.push(msg);
                 }
                 else{
-                    left_distance = index - msg.receiver;
-                    right_distance = msg.receiver + (nproc+1 - index);
-                }
-                if(left_distance < right_distance){
-                    if(interconnects[left_index].incomming.size()>0)
+                    if(v_size > 0)
                         contentions++;
-                    interconnects[left_index].incomming.push(msg);
-                }
-                else if(left_distance > right_distance){
-                    if(interconnects[left_index].incomming.size()>0)
-                        contentions++;
-                    interconnects[right_index].incomming.push(msg);
-                }
-                else{
-                    if(interconnects[left_index].incomming.size()<interconnects[right_index].incomming.size()){
-                        if(interconnects[left_index].incomming.size()>0)
-                            contentions++;
-                        interconnects[left_index].incomming.push(msg);
-                    }
-                    else{
-                        if(interconnects[left_index].incomming.size()>0)
-                            contentions++;
-                        interconnects[right_index].incomming.push(msg);
-                    }
+                    interconnects[v_index].incomming.push(msg);
                 }
             }
         }
@@ -132,7 +118,7 @@ void Ring::event()
 }
 
 
-bool Ring::check_directory(uint64_t addr){
+bool Mesh::check_directory(uint64_t addr){
     uint64_t current_state = get_directory_info(addr);
     for(size_t i=0;i<nproc;i++){
         Line *line;
@@ -145,7 +131,7 @@ bool Ring::check_directory(uint64_t addr){
     return true;
 }
 
-uint32_t Ring::num_proc(uint64_t addr){
+uint32_t Mesh::num_proc(uint64_t addr){
     uint64_t num = get_directory_info(addr);
     uint32_t ans = 0;
     while(num != 0){

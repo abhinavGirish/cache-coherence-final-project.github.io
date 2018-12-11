@@ -96,6 +96,18 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
         ring.set_cache_refs(cache_refs);
         mem->set_ring(&ring);
     }
+    else if(interconnect == 3){
+        mesh.set_nproc(config.nproc);
+        mesh.set_receivers(receivers);
+        mesh.init_interconnect();
+        for(auto &m : coherence_managers)
+        {
+            m->set_mesh(&mesh);
+        }
+        mesh.set_cache_refs(cache_refs);
+        mem->set_mesh(&mesh);
+
+    }
     else{
         bus.set_nproc(config.nproc);
         bus.set_receivers(receivers);
@@ -209,6 +221,9 @@ void Simulator::event()
     else if(interconnect ==2){
         ring.event();
     }
+    else if(interconnect == 3){
+        mesh.event();
+    }
     else{
         bus.event();
     }
@@ -243,7 +258,20 @@ uint64_t Simulator::get_num_messages() {
         return crossbar.get_num_messages();
     else if(interconnect == 2)
         return ring.get_num_messages();
+    else if(interconnect == 3)
+        return mesh.get_num_messages();
     else
         return bus.get_num_messages();
+}
+
+uint64_t Simulator::get_contentions() {
+    if(interconnect == 1)
+        return crossbar.get_contentions();
+    else if(interconnect == 2)
+        return ring.get_contentions();
+    else if(interconnect == 3)
+        return mesh.get_contentions();
+    else
+        return -1;
 }
 

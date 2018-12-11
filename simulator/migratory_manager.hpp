@@ -11,6 +11,7 @@
 #include "bus.hpp"
 #include "crossbar.hpp"
 #include "ring.hpp"
+#include "mesh.hpp"
 #include "coherence_manager_interface.hpp"
 #include "coherence_manager_misc.hpp"
 #include "mig_memory.hpp"
@@ -53,6 +54,7 @@ private:
     Bus *bus;
     Crossbar *crossbar;
     Ring *ring;
+    Mesh *mesh;
     int interconnect;
 
     std::queue<CMsg> incomming;
@@ -77,6 +79,7 @@ public:
     void set_bus(Bus *bus) { interconnect = 0; this->bus = bus; }
     void set_crossbar(Crossbar *crossbar) { interconnect = 1; this->crossbar = crossbar; }
     void set_ring(Ring *ring){interconnect = 2; this->ring = ring;}
+    void set_mesh(Mesh *mesh){interconnect = 3; this->mesh = mesh;}
     void event();
     void receive(CMsg msg) { incomming.push(msg); }
 

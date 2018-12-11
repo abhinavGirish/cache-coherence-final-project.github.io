@@ -42,7 +42,7 @@ int main(int argc, char **argv)
                 "only simulate Region Of Interest")
             ("mig", po::bool_switch(&mig)->default_value(false),
                 "use migratory coherence manager")
-            ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar, 2 - ring")
+            ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar, 2 - ring, 3 - mesh")
         ;
 
         po::variables_map vm;
@@ -97,6 +97,7 @@ int main(int argc, char **argv)
     std::cout << sim.get_stats();
     std::cout << "cycles: " << sim.get_cycles() << std::endl;
     std::cout << "num messages: " << sim.get_num_messages() << std::endl;
+    std::cout << "contentions: " << sim.get_contentions() << std::endl;
     std::cout << std::endl;
 
     return 0;

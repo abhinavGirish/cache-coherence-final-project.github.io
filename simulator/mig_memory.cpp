@@ -25,6 +25,9 @@ void MigMemory::event()
             else if(interconnect == 2){
                 ring->broadcast(msg);
             }
+            else if(interconnect == 3){
+                mesh->broadcast(msg);
+            }
             else{
                 bus->broadcast(msg);
             }

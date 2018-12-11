@@ -1,81 +1,43 @@
 
-#ifndef CROSSBAR_HPP
-#define CROSSBAR_HPP
+#ifndef MESH_HPP
+#define MESH_HPP
 
 #include <vector>
 #include <queue>
 #include <map>
+#include <math.h>
 
 #include "event.hpp"
 #include "countdown.hpp"
 #include "bus.hpp"
 #include "cache.hpp"
+#include "crossbar.hpp"
 
-/*
-enum class CMsgType
-{
-    none,
-    busRd,
-    busRdX,
-    ack,
-    data
-};
-std::ostream &operator<<(std::ostream& os, const CMsgType &type);
-
-struct CMsg
-{
-    CMsgType type;
-    uint32_t sender;    // For BusRd, BusRdX
-    uint32_t receiver;  // For ack
-    uint64_t addr;
-    size_t flags;
-};
-std::ostream &operator<<(std::ostream &os, const CMsg &msg);
-
-
-class Receiver
-{
-public:
-    virtual void receive(CMsg msg) = 0;
-    virtual ~Receiver() {};
-};
-
-
-const int BUS_DLY = 10;
-*/
-
-struct subinterconnect
-{
-    std::queue<CMsg> incomming;
-    Countdown delay;
-};
-
-class Crossbar : public Event
+class Mesh : public Event
 {
 private:
     std::vector<Receiver*> receivers;
-    //std::queue<CMsg> incomming;
     std::vector<subinterconnect> interconnects;
     uint64_t num_messages = 0;
-    uint32_t nproc;
     uint64_t contentions = 0;
+    uint64_t length = 0;
+    uint32_t nproc;
     std::vector<Cache *> cache_refs;
     std::map<uint64_t,uint64_t> directory;
 
-    //Countdown delay;
-    //Countdown acks;
     bool logging = false;
 
 public:
-    Crossbar() {} ;
-    Crossbar(std::vector<Receiver*> receivers) : receivers(receivers) {}
+    Mesh() {} ;
+    Mesh(std::vector<Receiver*> receivers) : receivers(receivers) {}
 
-    void init_interconnect(){ interconnects.resize((nproc+1)*(nproc+1)); }
+    void init_interconnect(){ interconnects.resize(nproc+1); }
 
-    void set_nproc(uint32_t nproc) { this->nproc = nproc; }
+    void set_nproc(uint32_t nproc) { this->nproc = nproc; length = (uint64_t)sqrt((double)nproc); }
     void set_receivers(std::vector<Receiver*> receivers) { this->receivers = receivers; }
     uint64_t get_num_messages(){ return num_messages; }
     uint64_t get_contentions(){ return contentions; }
+
     void set_cache_refs(std::vector<Cache *> cache_refs){this->cache_refs = cache_refs;}
 
     uint64_t get_directory_info(uint64_t addr){ return directory[addr];}

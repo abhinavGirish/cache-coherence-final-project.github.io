@@ -10,6 +10,7 @@
 #include "bus.hpp"
 #include "crossbar.hpp"
 #include "ring.hpp"
+#include "mesh.hpp"
 #include "countdown.hpp"
 #include "event.hpp"
 #include "mig_const.hpp"
@@ -31,6 +32,7 @@ private:
     Bus *bus;
     Crossbar *crossbar;
     Ring *ring;
+    Mesh *mesh;
     int interconnect;
     std::queue<CMsg> incomming;
     std::map<uint64_t, PendingMemOp> table;
@@ -44,6 +46,7 @@ public:
     void set_bus(Bus *bus) {interconnect = 0; this->bus = bus;}
     void set_crossbar(Crossbar *crossbar) {interconnect = 1; this->crossbar = crossbar;}
     void set_ring(Ring *ring) {interconnect = 2; this->ring = ring;}
+    void set_mesh(Mesh *mesh) {interconnect = 3, this->mesh = mesh;}
     void receive(CMsg msg) { incomming.push(msg); }
     void event();
 };

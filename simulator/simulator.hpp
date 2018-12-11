@@ -13,6 +13,7 @@
 #include "bus.hpp"
 #include "crossbar.hpp"
 #include "ring.hpp"
+#include "mesh.hpp"
 #include "coherence_manager_interface.hpp"
 #include "mesi_memory.hpp"
 #include "mig_memory.hpp"
@@ -37,6 +38,7 @@ private:
     Bus bus;
     Crossbar crossbar;
     Ring ring;
+    Mesh mesh;
     unique_ptr<MemoryInterface> mem;
 
     uint64_t num_cycles = 0;
@@ -59,6 +61,7 @@ public:
     void check();
     uint64_t get_cycles() { return num_cycles; }
     uint64_t get_num_messages();
+    uint64_t get_contentions();
     bool is_roi() { return roi; }
 };
 

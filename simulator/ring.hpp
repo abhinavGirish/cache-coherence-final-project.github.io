@@ -18,6 +18,7 @@ private:
     std::vector<Receiver*> receivers;
     std::vector<subinterconnect> interconnects;
     uint64_t num_messages = 0;
+    uint64_t contentions = 0;
     uint32_t nproc;
     std::vector<Cache *> cache_refs;
     std::map<uint64_t,uint64_t> directory;
@@ -33,6 +34,7 @@ public:
     void set_nproc(uint32_t nproc) { this->nproc = nproc; }
     void set_receivers(std::vector<Receiver*> receivers) { this->receivers = receivers; }
     uint64_t get_num_messages(){ return num_messages; }
+    uint64_t get_contentions(){ return contentions; }
 
     void set_cache_refs(std::vector<Cache *> cache_refs){this->cache_refs = cache_refs;}
 

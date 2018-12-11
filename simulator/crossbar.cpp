@@ -76,6 +76,8 @@ void Crossbar::broadcast(CMsg msg)
 
 void Crossbar::send(CMsg msg){
     num_messages++;
+    if(interconnects[msg.sender*(nproc+1) + msg.receiver].incomming.size()>0)
+        contentions++;
     interconnects[msg.sender*(nproc+1) + msg.receiver].incomming.push(msg);
 }
 
@@ -98,7 +100,6 @@ void Crossbar::send_ack(CMsg msg)
 
 void Crossbar::event()
 {
-  bool test = false;
   for(size_t i=0;i<(nproc+1)*(nproc+1);i++){
     if(interconnects[i].delay.is_done())
     {
