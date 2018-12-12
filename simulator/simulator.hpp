@@ -62,6 +62,7 @@ public:
     uint64_t get_cycles() { return num_cycles; }
     uint64_t get_num_messages();
     uint64_t get_contentions();
+    uint64_t get_hops();
     bool is_roi() { return roi; }
 };
 

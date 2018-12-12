@@ -59,6 +59,7 @@ private:
     uint64_t num_messages = 0;
     uint32_t nproc;
     uint64_t contentions = 0;
+    uint64_t hops = 0;
     std::vector<Cache *> cache_refs;
     std::map<uint64_t,uint64_t> directory;
 
@@ -76,6 +77,7 @@ public:
     void set_receivers(std::vector<Receiver*> receivers) { this->receivers = receivers; }
     uint64_t get_num_messages(){ return num_messages; }
     uint64_t get_contentions(){ return contentions; }
+    uint64_t get_hops(){ return hops; }
     void set_cache_refs(std::vector<Cache *> cache_refs){this->cache_refs = cache_refs;}
 
     uint64_t get_directory_info(uint64_t addr){ return directory[addr];}

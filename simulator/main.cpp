@@ -98,6 +98,7 @@ int main(int argc, char **argv)
     std::cout << "cycles: " << sim.get_cycles() << std::endl;
     std::cout << "num messages: " << sim.get_num_messages() << std::endl;
     std::cout << "contentions: " << sim.get_contentions() << std::endl;
+    std::cout << "hops: " << sim.get_hops() << std::endl;
     std::cout << std::endl;
 
     return 0;

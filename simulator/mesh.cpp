@@ -69,6 +69,7 @@ void Mesh::event()
     {
         if(interconnects[i].delay.tick())
         {
+	    hops++;
             CMsg msg = interconnects[i].incomming.front();
             assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();

@@ -116,6 +116,7 @@ void Crossbar::event()
             assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
             assert(msg.receiver <= nproc);
+	    hops++;
             receivers[msg.receiver]->receive(msg);
         }
     }

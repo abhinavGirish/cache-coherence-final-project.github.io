@@ -69,6 +69,7 @@ void Ring::event()
     {
         if(interconnects[i].delay.tick())
         {
+	    hops++;
             CMsg msg = interconnects[i].incomming.front();
             assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
@@ -89,7 +90,7 @@ void Ring::event()
             }
             if(left_index == msg.receiver || right_index == msg.receiver){
                 assert(msg.receiver <= nproc);
-                std::cout << "REACHED END" << std::endl;
+                //std::cout << "REACHED END" << std::endl;
                 receivers[msg.receiver]->receive(msg);
             }
             else{

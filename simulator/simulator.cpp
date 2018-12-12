@@ -275,3 +275,14 @@ uint64_t Simulator::get_contentions() {
         return -1;
 }
 
+uint64_t Simulator::get_hops() {
+    if(interconnect == 1)
+        return crossbar.get_hops();
+    else if(interconnect == 2)
+        return ring.get_hops();
+    else if(interconnect == 3)
+        return mesh.get_hops();
+    else
+        return -1;
+}
+
