@@ -108,6 +108,18 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
         mem->set_mesh(&mesh);
 
     }
+    else if(interconnect == 4){
+        torus.set_nproc(config.nproc);
+        torus.set_receivers(receivers);
+        torus.init_interconnect();
+        for(auto &m : coherence_managers)
+        {
+            m->set_torus(&torus);
+        }
+        torus.set_cache_refs(cache_refs);
+        mem->set_torus(&torus);
+
+    }
     else{
         bus.set_nproc(config.nproc);
         bus.set_receivers(receivers);
@@ -224,6 +236,9 @@ void Simulator::event()
     else if(interconnect == 3){
         mesh.event();
     }
+    else if(interconnect == 4){
+	torus.event();
+    }
     else{
         bus.event();
     }
@@ -260,6 +275,8 @@ uint64_t Simulator::get_num_messages() {
         return ring.get_num_messages();
     else if(interconnect == 3)
         return mesh.get_num_messages();
+    else if(interconnect == 4)
+	return torus.get_num_messages();
     else
         return bus.get_num_messages();
 }
@@ -271,6 +288,8 @@ uint64_t Simulator::get_contentions() {
         return ring.get_contentions();
     else if(interconnect == 3)
         return mesh.get_contentions();
+    else if(interconnect == 4)
+	return torus.get_contentions();
     else
         return -1;
 }
@@ -282,6 +301,8 @@ uint64_t Simulator::get_hops() {
         return ring.get_hops();
     else if(interconnect == 3)
         return mesh.get_hops();
+    else if(interconnect == 4)
+	return torus.get_hops();
     else
         return -1;
 }

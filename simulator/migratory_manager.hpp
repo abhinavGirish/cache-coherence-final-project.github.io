@@ -12,6 +12,7 @@
 #include "crossbar.hpp"
 #include "ring.hpp"
 #include "mesh.hpp"
+#include "torus.hpp"
 #include "coherence_manager_interface.hpp"
 #include "coherence_manager_misc.hpp"
 #include "mig_memory.hpp"
@@ -55,6 +56,7 @@ private:
     Crossbar *crossbar;
     Ring *ring;
     Mesh *mesh;
+    Torus *torus;
     int interconnect;
 
     std::queue<CMsg> incomming;
@@ -80,6 +82,7 @@ public:
     void set_crossbar(Crossbar *crossbar) { interconnect = 1; this->crossbar = crossbar; }
     void set_ring(Ring *ring){interconnect = 2; this->ring = ring;}
     void set_mesh(Mesh *mesh){interconnect = 3; this->mesh = mesh;}
+    void set_torus(Torus *torus){interconnect = 4; this->torus = torus;}
     void event();
     void receive(CMsg msg) { incomming.push(msg); }
 

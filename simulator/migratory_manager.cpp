@@ -118,6 +118,9 @@ void MigratoryManager::recv_busRd(CMsg &msg)
     else if(interconnect == 3){
         mesh->send_ack(out);
     }
+    else if(interconnect == 4){
+	torus->send_ack(out);
+    }
     else{
         bus->send_ack(out);
     }
@@ -140,6 +143,9 @@ void MigratoryManager::recv_busRd(CMsg &msg)
         else if(interconnect == 3){
             mesh->broadcast(data);
         }
+        else if(interconnect == 4){
+	    torus->broadcast(data);
+	}
         else{
             bus->broadcast(data);
         }
@@ -226,6 +232,9 @@ void MigratoryManager::recv_busRdX(CMsg &msg)
     else if(interconnect == 3){
         mesh->send_ack(out);
     }
+    else if(interconnect == 4){
+	torus->send_ack(out);
+    }
     else{
         bus->send_ack(out);
     }
@@ -248,6 +257,9 @@ void MigratoryManager::recv_busRdX(CMsg &msg)
         else if(interconnect == 3){
             mesh->broadcast(data);
         }
+        else if(interconnect == 4){
+	    torus->broadcast(data);
+	}
         else{
             bus->broadcast(data);
         }
@@ -369,7 +381,7 @@ void MigratoryManager::handle_pending_request()
         && pending_request.needed_acks <= 0
         && pending_request.got_data)
     {
-        std::cout << "proc " << proc << " completex request" << counter << std::endl;
+        //std::cout << "proc " << proc << " completex request" << counter << std::endl;
         counter++; // for debugging purposes only
 
         switch(pending_request.type)
@@ -398,6 +410,9 @@ void MigratoryManager::handle_pending_request()
                 }
                 else if(interconnect == 3){
                     mesh->add_to_directory(pending_request.addr, proc);
+                }
+                else if(interconnect == 4){
+                    torus->add_to_directory(pending_request.addr, proc);
                 }
                 cache->complete_read(pending_request.addr, new_state);
                 break;
@@ -455,6 +470,9 @@ void MigratoryManager::handle_pending_request()
                 else if(interconnect == 3){
                     mesh->set_new_directory(pending_request.addr, proc);
                 }
+                else if(interconnect == 4){
+                    torus->set_new_directory(pending_request.addr, proc);
+                }
                 cache->complete_write(pending_request.addr, new_state);
                 break;
             }
@@ -501,6 +519,12 @@ void MigratoryManager::read(uint64_t addr)
         if(mesh->is_set(addr,proc))
             acks--;
     }
+    else if(interconnect == 4){
+        assert(torus->check_directory(addr));
+        acks = torus->num_proc(addr);
+        if(torus->is_set(addr,proc))
+            acks--;
+    }
     pending_request = {
         CMsgType::busRd,
         addr,
@@ -541,6 +565,9 @@ void MigratoryManager::read(uint64_t addr)
     else if(interconnect == 3){
         mesh->broadcast(msg);
     }
+    else if(interconnect == 4){
+        torus->broadcast(msg);
+    }
     else{
         bus->broadcast(msg);
     }
@@ -563,6 +590,11 @@ void MigratoryManager::write(uint64_t addr)
     else if(interconnect == 3){
         acks = mesh->num_proc(addr);
         if(mesh->is_set(addr,proc))
+            acks--;
+    }
+    else if(interconnect == 4){
+        acks = torus->num_proc(addr);
+        if(torus->is_set(addr,proc))
             acks--;
     }
     pending_request = {
@@ -605,6 +637,9 @@ void MigratoryManager::write(uint64_t addr)
     }
     else if(interconnect == 3){
         mesh->broadcast(msg);
+    }
+    else if(interconnect == 4){
+        torus->broadcast(msg);
     }
     else{
         bus->broadcast(msg);

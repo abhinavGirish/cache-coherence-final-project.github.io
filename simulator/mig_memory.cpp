@@ -28,6 +28,9 @@ void MigMemory::event()
             else if(interconnect == 3){
                 mesh->broadcast(msg);
             }
+	    else if(interconnect == 4){
+		torus->broadcast(msg);
+	    }
             else{
                 bus->broadcast(msg);
             }
