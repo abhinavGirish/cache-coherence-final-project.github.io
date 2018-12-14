@@ -54,12 +54,18 @@ std::ostream &operator<<(std::ostream &os, const CMsg &msg)
 
 void Crossbar::broadcast(CMsg msg)
 {
-    assert(check_directory(msg.addr));
+    //assert(check_directory(msg.addr));
     if(msg.type == CMsgType::busRd || msg.type == CMsgType::busRdX){
-        msg.receiver = nproc;
+	if(numa)
+		msg.receiver = nproc+1;
+	else
+        	msg.receiver = nproc;
         send(msg);//receivers[nproc]->receive(msg);
         uint64_t current_state = get_directory_info(msg.addr);
-        for(size_t i=0;i<nproc;i++){
+        size_t iter = nproc;
+	if(numa)
+		iter++;
+	for(size_t i=0;i<iter;i++){
             if(current_state & 0x1 && i!=msg.sender){
                 msg.receiver = i;
                 send(msg);//receivers[i]->receive(msg);
@@ -68,17 +74,27 @@ void Crossbar::broadcast(CMsg msg)
         }
     }
     else{
-        if(msg.sender==MEM)
-            msg.sender=nproc;
+        if(msg.sender==MEM){
+	    if(numa)
+		msg.sender= nproc+1;
+	    else
+            	msg.sender= nproc;
+	}
         send(msg);
     }
 }
 
 void Crossbar::send(CMsg msg){
+    int recv = msg.receiver;
+    int sent = msg.sender;
+    if(numa && msg.receiver == nproc+1)
+	recv = get_addr_proc(msg.addr);
+    if(numa && msg.sender == nproc+1)
+	sent = get_addr_proc(msg.addr);
     num_messages++;
-    if(interconnects[msg.sender*(nproc+1) + msg.receiver].incomming.size()>0)
+    if(interconnects[sent*(nproc+1) + recv].incomming.size()>0)
         contentions++;
-    interconnects[msg.sender*(nproc+1) + msg.receiver].incomming.push(msg);
+    interconnects[sent*(nproc+1) + recv].incomming.push(msg);
 }
 
 void Crossbar::send_ack(CMsg msg)
@@ -91,7 +107,10 @@ void Crossbar::send_ack(CMsg msg)
     assert(check_directory(msg.addr));
     broadcast(msg);//incomming.push(msg);
     if(msg.flags & MigBusFlag::TRANSMIT){
-        msg.receiver = nproc;
+	if(numa)
+		msg.receiver = nproc+1;
+	else
+        	msg.receiver = nproc;
         broadcast(msg);//incomming.push(msg);
     }
     //receivers[msg.receiver]->receive(msg);
@@ -113,9 +132,9 @@ void Crossbar::event()
         if(interconnects[i].delay.tick())
         {
             CMsg msg = interconnects[i].incomming.front();
-            assert(check_directory(msg.addr));
+            //assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
-            assert(msg.receiver <= nproc);
+            //assert(msg.receiver <= nproc);
 	    hops++;
             receivers[msg.receiver]->receive(msg);
         }

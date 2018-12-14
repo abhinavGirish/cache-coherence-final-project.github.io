@@ -62,6 +62,7 @@ private:
     uint64_t hops = 0;
     std::vector<Cache *> cache_refs;
     std::map<uint64_t,uint64_t> directory;
+    bool numa = false;
 
     //Countdown delay;
     //Countdown acks;
@@ -73,7 +74,8 @@ public:
 
     void init_interconnect(){ interconnects.resize((nproc+1)*(nproc+1)); }
 
-    void set_nproc(uint32_t nproc) { this->nproc = nproc; }
+    void set_numa(){numa=true;}
+    void set_nproc(uint32_t nproc) { if(numa){this->nproc = nproc-1;} else{this->nproc = nproc; }}
     void set_receivers(std::vector<Receiver*> receivers) { this->receivers = receivers; }
     uint64_t get_num_messages(){ return num_messages; }
     uint64_t get_contentions(){ return contentions; }
@@ -84,6 +86,9 @@ public:
     bool is_set(uint64_t addr, uint32_t proc){return directory[addr]>>proc & 0x1;}
     void add_to_directory(uint64_t addr, uint32_t proc){ directory[addr] = directory[addr] | (0x1<<proc); }
     void set_new_directory(uint64_t addr, uint32_t proc){ directory[addr] = 0x1 << proc;}
+
+    uint32_t get_addr_proc(uint64_t addr){return (addr>>12)%(nproc+1); }
+
     void event();
     void broadcast(CMsg msg);
     void send(CMsg msg);

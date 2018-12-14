@@ -14,12 +14,18 @@
 
 void Ring::broadcast(CMsg msg)
 {
-    assert(check_directory(msg.addr));
+    //assert(check_directory(msg.addr));
     if(msg.type == CMsgType::busRd || msg.type == CMsgType::busRdX){
-        msg.receiver = nproc;
+	if(numa)
+		msg.receiver = nproc+1;
+	else
+        	msg.receiver = nproc;
         send(msg);
         uint64_t current_state = get_directory_info(msg.addr);
-        for(size_t i=0;i<nproc;i++){
+	size_t iter = nproc;
+	if(numa)
+		iter++;
+        for(size_t i=0;i<iter;i++){
             if(current_state & 0x1 && i!=msg.sender){
                 msg.receiver = i;
                 send(msg);
@@ -28,17 +34,24 @@ void Ring::broadcast(CMsg msg)
         }
     }
     else{
-        if(msg.sender==MEM)
-            msg.sender=nproc;
+        if(msg.sender==MEM){
+	    if(numa)
+		msg.sender = nproc+1;
+	    else
+            	msg.sender=nproc;
+	}
         send(msg);
     }
 }
 
 void Ring::send(CMsg msg){
+    int sent = msg.sender;
+    if(numa && msg.sender == nproc + 1)
+	sent = get_addr_proc(msg.addr);
     num_messages++;
-    if(interconnects[msg.sender].incomming.size()>0)
+    if(interconnects[sent].incomming.size()>0)
         contentions++;
-    interconnects[msg.sender].incomming.push(msg);
+    interconnects[sent].incomming.push(msg);
 }
 
 void Ring::send_ack(CMsg msg)
@@ -47,10 +60,13 @@ void Ring::send_ack(CMsg msg)
     {
         migratory++;
     }
-    assert(check_directory(msg.addr));
+    //assert(check_directory(msg.addr));
     broadcast(msg);
     if(msg.flags & MigBusFlag::TRANSMIT){
-        msg.receiver = nproc;
+	if(numa)
+		msg.receiver = nproc+1;
+	else
+        	msg.receiver = nproc;
         broadcast(msg);
     }
 }
@@ -71,8 +87,11 @@ void Ring::event()
         {
 	    hops++;
             CMsg msg = interconnects[i].incomming.front();
-            assert(check_directory(msg.addr));
+            //assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
+	    size_t recv = msg.receiver;
+	    if(numa && msg.receiver == nproc + 1)
+		recv = get_addr_proc(msg.addr);
             int index = i;
             int left_index;
             int right_index;
@@ -88,21 +107,21 @@ void Ring::event()
             else{
                 right_index = index + 1;
             }
-            if(left_index == msg.receiver || right_index == msg.receiver){
-                assert(msg.receiver <= nproc);
+            if(left_index == recv || right_index == recv){
+                //assert(msg.receiver <= nproc);
                 //std::cout << "REACHED END" << std::endl;
                 receivers[msg.receiver]->receive(msg);
             }
             else{
                 int right_distance;
                 int left_distance;
-                if(index < msg.receiver){
-                    right_distance = msg.receiver - index;
-                    left_distance = index + (nproc+1 - msg.receiver);
+                if(index < recv){
+                    right_distance = recv - index;
+                    left_distance = index + (nproc+1 - recv);
                 }
                 else{
-                    left_distance = index - msg.receiver;
-                    right_distance = msg.receiver + (nproc+1 - index);
+                    left_distance = index - recv;
+                    right_distance = recv + (nproc+1 - index);
                 }
                 if(left_distance < right_distance){
                     if(interconnects[left_index].incomming.size()>0)
@@ -110,7 +129,7 @@ void Ring::event()
                     interconnects[left_index].incomming.push(msg);
                 }
                 else if(left_distance > right_distance){
-                    if(interconnects[left_index].incomming.size()>0)
+                    if(interconnects[right_index].incomming.size()>0)
                         contentions++;
                     interconnects[right_index].incomming.push(msg);
                 }
@@ -121,7 +140,7 @@ void Ring::event()
                         interconnects[left_index].incomming.push(msg);
                     }
                     else{
-                        if(interconnects[left_index].incomming.size()>0)
+                        if(interconnects[right_index].incomming.size()>0)
                             contentions++;
                         interconnects[right_index].incomming.push(msg);
                     }

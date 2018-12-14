@@ -16,10 +16,16 @@ void Mesh::broadcast(CMsg msg)
 {
     assert(check_directory(msg.addr));
     if(msg.type == CMsgType::busRd || msg.type == CMsgType::busRdX){
-        msg.receiver = nproc;
+	if(numa)
+        	msg.receiver = nproc+1;
+	else
+		msg.receiver = nproc;
         send(msg);
         uint64_t current_state = get_directory_info(msg.addr);
-        for(size_t i=0;i<nproc;i++){
+	size_t iter = nproc;
+	if(numa)
+		iter++;
+        for(size_t i=0;i<iter;i++){
             if(current_state & 0x1 && i!=msg.sender){
                 msg.receiver = i;
                 send(msg);
@@ -29,16 +35,24 @@ void Mesh::broadcast(CMsg msg)
     }
     else{
         if(msg.sender==MEM)
-            msg.sender=nproc;
+	{
+	    if(numa)
+		msg.sender = nproc+1;
+	    else
+            	msg.sender=nproc;
+	}
         send(msg);
     }
 }
 
 void Mesh::send(CMsg msg){
+    int sent = msg.sender;
+    if(numa && msg.sender == nproc + 1)
+	sent = get_addr_proc(msg.addr);
     num_messages++;
-    if(interconnects[msg.sender].incomming.size()>0)
+    if(interconnects[sent].incomming.size()>0)
         contentions++;
-    interconnects[msg.sender].incomming.push(msg);
+    interconnects[sent].incomming.push(msg);
 }
 
 void Mesh::send_ack(CMsg msg)
@@ -50,7 +64,10 @@ void Mesh::send_ack(CMsg msg)
     assert(check_directory(msg.addr));
     broadcast(msg);
     if(msg.flags & MigBusFlag::TRANSMIT){
-        msg.receiver = nproc;
+	if(numa)
+		msg.receiver = nproc+1;
+	else
+		msg.receiver = nproc;
         broadcast(msg);
     }
 }
@@ -75,8 +92,11 @@ void Mesh::event()
             interconnects[i].incomming.pop();
             int c_x = i%length;
             int c_y = i/length;
-            int e_x = msg.receiver%length;
-            int e_y = msg.receiver/length;
+	    size_t recv = msg.receiver;
+	    if(numa && msg.receiver == nproc + 1)
+		recv = get_addr_proc(msg.addr);
+            int e_x = recv%length;
+            int e_y = recv/length;
             int n_x = c_x;
             int n_y = c_y;
             if(c_x<e_x)
@@ -88,7 +108,7 @@ void Mesh::event()
             else if(c_y>e_y)
                 n_y = c_y - 1;
             if(n_x == e_x && n_y == e_y){
-                assert(msg.receiver <= nproc);
+                //assert(msg.receiver <= nproc);
                 //std::cout << "REACHED THE END" << std::endl;
                 receivers[msg.receiver]->receive(msg);
             }
