@@ -24,14 +24,14 @@ private:
     std::vector<Cache *> cache_refs;
     std::map<uint64_t,uint64_t> directory;
 
-    bool numa = false;
+    bool numa = true;
     bool logging = false;
 
 public:
     Ring() {} ;
     Ring(std::vector<Receiver*> receivers) : receivers(receivers) {}
 
-    void init_interconnect(){ interconnects.resize(nproc+1); }
+    void init_interconnect(){ interconnects.resize((nproc+1)*(nproc+1)); }
 
     void set_numa(){ numa = true; }
 
@@ -60,6 +60,7 @@ public:
 
     bool check_directory(uint64_t addr);
     uint32_t num_proc(uint64_t addr);
+    uint32_t next(uint32_t current, CMsg msg);
 };
 
 

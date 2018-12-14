@@ -23,6 +23,7 @@ int main(int argc, char **argv)
     int limit;
     bool roi;
     bool mig;
+    bool numa;
     int interconnect;
     po::positional_options_description p;
     p.add("tracefile", 1);
@@ -43,6 +44,8 @@ int main(int argc, char **argv)
             ("mig", po::bool_switch(&mig)->default_value(false),
                 "use migratory coherence manager")
             ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar, 2 - ring, 3 - mesh, 4 - torus")
+	    ("numa", po::bool_switch(&numa)->default_value(false),
+                "use non-uninform memory access")
         ;
 
         po::variables_map vm;
@@ -83,7 +86,7 @@ int main(int argc, char **argv)
 
     /* run the simulation with the tracefile, cache configuration, region of interest, migratory
        flags and limit on tasks to simulate*/
-    Simulator sim(tracefile.c_str(), config, roi, limit, mig, interconnect);
+    Simulator sim(tracefile.c_str(), config, roi, limit, mig, interconnect, numa);
     std::cout << "Initialization complete; beginning simulation" << std::endl;
 
     sim.run();

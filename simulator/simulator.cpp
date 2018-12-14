@@ -3,7 +3,7 @@
 
 #include "simulator.hpp"
 
-Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect)
+Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa)
     : table(OUTSANDING_REQUESTS), roi(roi), limit(limit)
 {
 
@@ -72,6 +72,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     // connecting bus to coherence managers
 
     if(interconnect == 1){
+	if(numa)
+		crossbar.set_numa();
         crossbar.set_nproc(config.nproc);
         crossbar.set_receivers(receivers);
         crossbar.init_interconnect();
@@ -86,6 +88,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
 
     }
     else if(interconnect == 2){
+	if(numa)
+		ring.set_numa();
         ring.set_nproc(config.nproc);
         ring.set_receivers(receivers);
         ring.init_interconnect();
@@ -97,6 +101,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
         mem->set_ring(&ring);
     }
     else if(interconnect == 3){
+	if(numa)
+		mesh.set_numa();
         mesh.set_nproc(config.nproc);
         mesh.set_receivers(receivers);
         mesh.init_interconnect();
@@ -109,6 +115,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
 
     }
     else if(interconnect == 4){
+	if(numa)
+		torus.set_numa();
         torus.set_nproc(config.nproc);
         torus.set_receivers(receivers);
         torus.init_interconnect();
