@@ -54,6 +54,7 @@ void Torus::send(CMsg msg){
 	sent = get_addr_proc(msg.addr);
     num_messages++;
     uint32_t recv = next(sent,msg);
+    //uint32_t recv = next(sent,msg);
     size_t index;
     if(unidirectional)
 	index = sent*(nproc+1) + recv;
@@ -66,7 +67,7 @@ void Torus::send(CMsg msg){
     }
     if(interconnects[index].incomming.size()>0)
         contentions++;
-    interconnects[index].incomming.push(msg);    
+    interconnects[index].incomming.push(msg);
 }
 
 void Torus::send_ack(CMsg msg)
@@ -89,9 +90,6 @@ void Torus::send_ack(CMsg msg)
 void Torus::event()
 {
   for(size_t i=0;i<(nproc+1)*(nproc+1);i++){
-    uint32_t s = i/(nproc+1);
-    uint32_t r = i%(nproc+1);
-
     if(interconnects[i].delay.is_done())
     {
             if(interconnects[i].incomming.size() > 0)
@@ -101,13 +99,16 @@ void Torus::event()
     }
     else
     {
-        if(interconnects[i].delay.tick() || s==r)
+        if(interconnects[i].delay.tick())
         {
 	    hops++;
             CMsg msg = interconnects[i].incomming.front();
             assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
-            if(!unidirectional){
+            uint32_t s = i/(nproc+1);
+	    uint32_t r = i%(nproc+1);
+	    size_t recv = msg.receiver;
+	    if(!unidirectional){
 	    bool flipped = interconnects[i].flip.front();
 	    if(flipped){
 		uint32_t t = s;
@@ -115,7 +116,6 @@ void Torus::event()
 		r = t;
 	    }
 	    interconnects[i].flip.pop();}
-	    size_t recv = msg.receiver;
 	    if(numa && msg.receiver == nproc + 1)
 		recv = get_addr_proc(msg.addr);
 	    if(r == recv)
@@ -135,7 +135,8 @@ void Torus::event()
 		if(interconnects[index].incomming.size()>0)
                        contentions++;
                 interconnects[index].incomming.push(msg);
-	
+
+
 	    } 
         }
     }

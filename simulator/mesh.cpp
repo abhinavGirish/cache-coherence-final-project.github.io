@@ -89,9 +89,6 @@ void Mesh::send_ack(CMsg msg)
 void Mesh::event()
 {
   for(size_t i=0;i<(nproc+1)*(nproc+1);i++){
-    uint32_t s = i/(nproc+1);
-    uint32_t r = i%(nproc+1);
-
     if(interconnects[i].delay.is_done())
     {
             if(interconnects[i].incomming.size() > 0)
@@ -101,12 +98,15 @@ void Mesh::event()
     }
     else
     {
-        if(interconnects[i].delay.tick() || s==r)
+        if(interconnects[i].delay.tick())
         {
 	    hops++;
             CMsg msg = interconnects[i].incomming.front();
             assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
+	    uint32_t s = i/(nproc+1);
+	    uint32_t r = i%(nproc+1);
+	    size_t recv = msg.receiver;
 	    if(!unidirectional){
 	    bool flipped = interconnects[i].flip.front();
 	    if(flipped){
@@ -115,7 +115,6 @@ void Mesh::event()
 		r = t;
 	    }
 	    interconnects[i].flip.pop();}
-	    size_t recv = msg.receiver;
 	    if(numa && msg.receiver == nproc + 1)
 		recv = get_addr_proc(msg.addr);
 	    if(r == recv)
@@ -135,6 +134,7 @@ void Mesh::event()
 		if(interconnects[index].incomming.size()>0)
                        contentions++;
                 interconnects[index].incomming.push(msg);
+
 
 	    }
             
