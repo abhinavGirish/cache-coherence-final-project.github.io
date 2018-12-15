@@ -24,8 +24,10 @@ private:
     std::vector<Cache *> cache_refs;
     std::map<uint64_t,uint64_t> directory;
 
-    bool numa = true;
+    bool numa = false;
     bool unidirectional = false;
+
+    size_t limited_pointers = 0;
 
     bool logging = false;
 
@@ -34,7 +36,9 @@ public:
     Ring(std::vector<Receiver*> receivers) : receivers(receivers) {}
 
     void init_interconnect(){ interconnects.resize((nproc+1)*(nproc+1)); }
-
+ 
+    void set_limit(size_t limited_pointers){this->limited_pointers = limited_pointers;}
+    
     void set_unidirectional(){ unidirectional = true; }
     void set_numa(){ numa = true; }
 
@@ -60,6 +64,8 @@ public:
     void log_off() { logging = false; }
 
     int migratory = 0;
+
+    bool broadcast_needed(uint64_t addr);
 
     void write_stats(const char* outfile);
 

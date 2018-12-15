@@ -25,11 +25,12 @@ void Torus::broadcast(CMsg msg)
         	msg.receiver = nproc;
         send(msg);
         uint64_t current_state = get_directory_info(msg.addr);
+	bool broadcasting = broadcast_needed(msg.addr);
 	size_t iter = nproc;
 	if(numa)
 		iter++;
         for(size_t i=0;i<iter;i++){
-            if(current_state & 0x1 && i!=msg.sender){
+            if((current_state & 0x1 || broadcasting) && i!=msg.sender){
                 msg.receiver = i;
                 send(msg);
             }
@@ -65,8 +66,10 @@ void Torus::send(CMsg msg){
 	else
 		interconnects[index].flip.push(false);
     }
-    if(interconnects[index].incomming.size()>0)
+    if(interconnects[index].incomming.size()>0){
+	interconnects[index].contentions++;
         contentions++;
+    }
     interconnects[index].incomming.push(msg);
 }
 
@@ -102,6 +105,7 @@ void Torus::event()
         if(interconnects[i].delay.tick())
         {
 	    hops++;
+	    interconnects[i].hops++;
             CMsg msg = interconnects[i].incomming.front();
             assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
@@ -132,8 +136,10 @@ void Torus::event()
 			else
 				interconnects[index].flip.push(false);
 		}
-		if(interconnects[index].incomming.size()>0)
+		if(interconnects[index].incomming.size()>0){
                        contentions++;
+		       interconnects[index].contentions++;
+		}
                 interconnects[index].incomming.push(msg);
 
 
@@ -259,6 +265,23 @@ uint32_t Torus::num_proc(uint64_t addr){
         num = num >> 1;
     }
     return ans;
+}
+
+bool Torus::broadcast_needed(uint64_t addr){
+	size_t count = 0;
+	uint64_t current_state = get_directory_info(addr);
+        size_t iter = nproc;
+	if(numa)
+		iter++;
+	for(size_t i=0;i<iter;i++){
+            if(current_state & 0x1){
+		count++;
+       	    }
+	    if(count>limited_pointers)
+		return true;
+            current_state = current_state>>1;
+        }
+	return false;
 }
 
 void Torus::write_stats(const char *outfile){

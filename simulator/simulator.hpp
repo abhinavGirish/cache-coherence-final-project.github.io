@@ -52,7 +52,7 @@ private:
     bool done = false;
 
 public:
-    Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa, bool unidirectional);
+    Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa, bool unidirectional, size_t pointers);
 
     void run(bool progbar);
     void run() { run(true); }

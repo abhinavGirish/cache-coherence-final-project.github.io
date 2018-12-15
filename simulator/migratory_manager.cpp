@@ -501,31 +501,27 @@ void MigratoryManager::handle_pending_request()
 void MigratoryManager::read(uint64_t addr)
 {
     uint32_t acks = nproc - 1;
-    if(interconnect == 1){
-        assert(crossbar->check_directory(addr));
+    if(interconnect == 1 && !crossbar->broadcast_needed(addr)){
         acks = crossbar->num_proc(addr);
         if(crossbar->is_set(addr,proc))
             acks--;
     }
-    else if(interconnect == 2){
-        assert(ring->check_directory(addr));
+    else if(interconnect == 2 && !ring->broadcast_needed(addr)){
         acks = ring->num_proc(addr);
         if(ring->is_set(addr,proc))
             acks--;
     }
-    else if(interconnect == 3){
-        assert(mesh->check_directory(addr));
+    else if(interconnect == 3 && !mesh->broadcast_needed(addr)){
         acks = mesh->num_proc(addr);
         if(mesh->is_set(addr,proc))
             acks--;
     }
-    else if(interconnect == 4){
-        assert(torus->check_directory(addr));
+    else if(interconnect == 4 && !torus->broadcast_needed(addr)){
         acks = torus->num_proc(addr);
         if(torus->is_set(addr,proc))
             acks--;
     }
-    pending_request = {
+        pending_request = {
         CMsgType::busRd,
         addr,
         acks,
@@ -577,22 +573,22 @@ void MigratoryManager::read(uint64_t addr)
 void MigratoryManager::write(uint64_t addr)
 {
     uint32_t acks = nproc - 1;
-    if(interconnect == 1){
+    if(interconnect == 1 && !crossbar->broadcast_needed(addr)){
         acks = crossbar->num_proc(addr);
         if(crossbar->is_set(addr,proc))
             acks--;
     }
-    else if(interconnect == 2){
+    else if(interconnect == 2 && !ring->broadcast_needed(addr)){
         acks = ring->num_proc(addr);
         if(ring->is_set(addr,proc))
             acks--;
     }
-    else if(interconnect == 3){
+    else if(interconnect == 3 && !mesh->broadcast_needed(addr)){
         acks = mesh->num_proc(addr);
         if(mesh->is_set(addr,proc))
             acks--;
     }
-    else if(interconnect == 4){
+    else if(interconnect == 4 && !torus->broadcast_needed(addr)){
         acks = torus->num_proc(addr);
         if(torus->is_set(addr,proc))
             acks--;

@@ -71,11 +71,15 @@ private:
     //Countdown acks;
     bool logging = false;
 
+    size_t limited_pointers = 0;
+
 public:
     Crossbar() {} ;
     Crossbar(std::vector<Receiver*> receivers) : receivers(receivers) {}
 
     void init_interconnect(){ interconnects.resize((nproc+1)*(nproc+1)); }
+
+    void set_limit(size_t limited_pointers){this->limited_pointers = limited_pointers;}
 
     void set_numa(){numa=true;}
     void set_unidirectional(){ unidirectional= true; }
@@ -100,6 +104,7 @@ public:
     void log_on() { logging = true; }
     void log_off() { logging = false; }
 
+    bool broadcast_needed(uint64_t addr);
 
     void write_stats(const char* outfile);
 

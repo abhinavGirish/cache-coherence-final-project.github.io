@@ -3,7 +3,7 @@
 
 #include "simulator.hpp"
 
-Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa, bool unidirectional)
+Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa, bool unidirectional, size_t pointers)
     : table(OUTSANDING_REQUESTS), roi(roi), limit(limit)
 {
 
@@ -77,6 +77,7 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
 	if(unidirectional)
 		crossbar.set_unidirectional();
         crossbar.set_nproc(config.nproc);
+	crossbar.set_limit(pointers);
         crossbar.set_receivers(receivers);
         crossbar.init_interconnect();
         for(auto &m : coherence_managers)
@@ -95,6 +96,7 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
 	if(unidirectional)
 		ring.set_unidirectional();
         ring.set_nproc(config.nproc);
+	ring.set_limit(pointers);
         ring.set_receivers(receivers);
         ring.init_interconnect();
         for(auto &m : coherence_managers)
@@ -109,6 +111,7 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
 		mesh.set_numa();
 	if(unidirectional)
 		mesh.set_unidirectional();
+	mesh.set_limit(pointers);
         mesh.set_nproc(config.nproc);
         mesh.set_receivers(receivers);
         mesh.init_interconnect();
@@ -126,6 +129,7 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
 	if(unidirectional)
 		torus.set_unidirectional();
         torus.set_nproc(config.nproc);
+	torus.set_limit(pointers);
         torus.set_receivers(receivers);
         torus.init_interconnect();
         for(auto &m : coherence_managers)

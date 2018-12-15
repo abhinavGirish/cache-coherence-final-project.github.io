@@ -29,6 +29,7 @@ int main(int argc, char **argv)
     int interconnect;
     po::positional_options_description p;
     p.add("tracefile", 1);
+    size_t pointers;
 
     //messages for handling bad cmdline input, displaying
     //cmdline options
@@ -48,6 +49,7 @@ int main(int argc, char **argv)
             ("mig", po::bool_switch(&mig)->default_value(false),
                 "use migratory coherence manager")
             ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar, 2 - ring, 3 - mesh, 4 - torus")
+	    ("pointers", po::value<size_t>(&pointers)->default_value(0), "number of pointers to use for limited pointer scheme. 0 for full table")
 	    ("numa", po::bool_switch(&numa)->default_value(false),
                 "use non-uninform memory access")
 	    ("unidirectional", po::bool_switch(&unidirectional)->default_value(false), "use 2 unidirectional sub-interconnects instead of 1 bidirectional sub-interconnect")
@@ -91,7 +93,7 @@ int main(int argc, char **argv)
 
     /* run the simulation with the tracefile, cache configuration, region of interest, migratory
        flags and limit on tasks to simulate*/
-    Simulator sim(tracefile.c_str(), config, roi, limit, mig, interconnect, numa,unidirectional);
+    Simulator sim(tracefile.c_str(), config, roi, limit, mig, interconnect, numa,unidirectional, pointers);
     std::cout << "Initialization complete; beginning simulation" << std::endl;
 
     sim.run();
