@@ -16,6 +16,7 @@ public:
     virtual void set_ring(Ring *ring) = 0;
     virtual void set_mesh(Mesh *mesh) = 0;
     virtual void set_torus(Torus *torus) = 0;
+    virtual void set_omega(Omega *omega) = 0;
     virtual void receive(CMsg msg) = 0;
     virtual void event() = 0;
 };

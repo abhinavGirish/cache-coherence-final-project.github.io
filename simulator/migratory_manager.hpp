@@ -13,6 +13,7 @@
 #include "ring.hpp"
 #include "mesh.hpp"
 #include "torus.hpp"
+#include "omega.hpp"
 #include "coherence_manager_interface.hpp"
 #include "coherence_manager_misc.hpp"
 #include "mig_memory.hpp"
@@ -57,6 +58,7 @@ private:
     Ring *ring;
     Mesh *mesh;
     Torus *torus;
+    Omega *omega;
     int interconnect;
 
     std::queue<CMsg> incomming;
@@ -83,6 +85,7 @@ public:
     void set_ring(Ring *ring){interconnect = 2; this->ring = ring;}
     void set_mesh(Mesh *mesh){interconnect = 3; this->mesh = mesh;}
     void set_torus(Torus *torus){interconnect = 4; this->torus = torus;}
+    void set_omega(Omega *omega){interconnect = 5; this->omega = omega;}
     void event();
     void receive(CMsg msg) { incomming.push(msg); }
 

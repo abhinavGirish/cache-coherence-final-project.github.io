@@ -140,6 +140,24 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
         mem->set_torus(&torus);
 
     }
+    else if(interconnect == 5){
+	if(numa)
+		omega.set_numa();
+	if(unidirectional)
+		omega.set_unidirectional();
+        omega.set_nproc(config.nproc);
+	omega.set_limit(pointers);
+        omega.set_receivers(receivers);
+	omega.get_num_bits();
+        omega.init_interconnect();
+        for(auto &m : coherence_managers)
+        {
+            m->set_omega(&omega);
+        }
+        omega.set_cache_refs(cache_refs);
+        mem->set_omega(&omega);
+
+    }
     else{
         bus.set_nproc(config.nproc);
         bus.set_receivers(receivers);
@@ -259,6 +277,9 @@ void Simulator::event()
     else if(interconnect == 4){
 	torus.event();
     }
+    else if(interconnect == 5){
+	omega.event();
+    }
     else{
         bus.event();
     }
@@ -297,6 +318,8 @@ uint64_t Simulator::get_num_messages() {
         return mesh.get_num_messages();
     else if(interconnect == 4)
 	return torus.get_num_messages();
+    else if(interconnect == 5)
+	return omega.get_num_messages();
     else
         return bus.get_num_messages();
 }
@@ -310,6 +333,8 @@ uint64_t Simulator::get_contentions() {
         return mesh.get_contentions();
     else if(interconnect == 4)
 	return torus.get_contentions();
+    else if(interconnect == 5)
+	return omega.get_contentions();
     else
         return -1;
 }
@@ -323,6 +348,8 @@ uint64_t Simulator::get_hops() {
         return mesh.get_hops();
     else if(interconnect == 4)
 	return torus.get_hops();
+    else if(interconnect == 5)
+	return omega.get_hops();
     else
         return -1;
 }

@@ -15,6 +15,7 @@
 #include "ring.hpp"
 #include "mesh.hpp"
 #include "torus.hpp"
+#include "omega.hpp"
 #include "coherence_manager_interface.hpp"
 #include "mesi_memory.hpp"
 #include "mig_memory.hpp"
@@ -41,6 +42,7 @@ private:
     Ring ring;
     Mesh mesh;
     Torus torus;
+    Omega omega;
     unique_ptr<MemoryInterface> mem;
 
     uint64_t num_cycles = 0;
@@ -75,6 +77,8 @@ public:
 		mesh.write_stats(out);
 	else if(interconnect == 4)
 		torus.write_stats(out);
+	else if(interconnect == 5)
+		omega.write_stats(out);
     }
 };
 

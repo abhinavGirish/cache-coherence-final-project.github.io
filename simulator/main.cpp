@@ -48,7 +48,7 @@ int main(int argc, char **argv)
                 "only simulate Region Of Interest")
             ("mig", po::bool_switch(&mig)->default_value(false),
                 "use migratory coherence manager")
-            ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar, 2 - ring, 3 - mesh, 4 - torus")
+            ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar, 2 - ring, 3 - mesh, 4 - torus, 5 - omega")
 	    ("pointers", po::value<size_t>(&pointers)->default_value(0), "number of pointers to use for limited pointer scheme. 0 for full table")
 	    ("numa", po::bool_switch(&numa)->default_value(false),
                 "use non-uninform memory access")
