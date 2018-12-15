@@ -20,10 +20,12 @@ namespace po = boost::program_options;
 int main(int argc, char **argv)
 {
     std::string tracefile;
+    std::string outfile;
     int limit;
     bool roi;
     bool mig;
     bool numa;
+    bool unidirectional;
     int interconnect;
     po::positional_options_description p;
     p.add("tracefile", 1);
@@ -37,6 +39,8 @@ int main(int argc, char **argv)
             ("help", "produce help message")
             ("tracefile", po::value<std::string>(&tracefile)->required(),
                 "trace file to simulate")
+	    ("outfile", po::value<std::string>(&outfile)->default_value(""),
+                "output individual stats for interconnects to file")
             ("limit,l", po::value<int>(&limit)->default_value(-1),
                 "limit number of tasks to simulate")
             ("roi", po::bool_switch(&roi)->default_value(false),
@@ -46,6 +50,7 @@ int main(int argc, char **argv)
             ("interconnect",po::value<int>(&interconnect)->default_value(0),  "0 - bus, 1 - crossbar, 2 - ring, 3 - mesh, 4 - torus")
 	    ("numa", po::bool_switch(&numa)->default_value(false),
                 "use non-uninform memory access")
+	    ("unidirectional", po::bool_switch(&unidirectional)->default_value(false), "use 2 unidirectional sub-interconnects instead of 1 bidirectional sub-interconnect")
         ;
 
         po::variables_map vm;
@@ -86,7 +91,7 @@ int main(int argc, char **argv)
 
     /* run the simulation with the tracefile, cache configuration, region of interest, migratory
        flags and limit on tasks to simulate*/
-    Simulator sim(tracefile.c_str(), config, roi, limit, mig, interconnect, numa);
+    Simulator sim(tracefile.c_str(), config, roi, limit, mig, interconnect, numa,unidirectional);
     std::cout << "Initialization complete; beginning simulation" << std::endl;
 
     sim.run();
@@ -103,6 +108,9 @@ int main(int argc, char **argv)
     std::cout << "contentions: " << sim.get_contentions() << std::endl;
     std::cout << "hops: " << sim.get_hops() << std::endl;
     std::cout << std::endl;
+
+    if(outfile.compare("") != 0)
+	sim.output_stats(outfile.c_str());
 
     return 0;
 }

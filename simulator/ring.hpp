@@ -25,6 +25,8 @@ private:
     std::map<uint64_t,uint64_t> directory;
 
     bool numa = true;
+    bool unidirectional = false;
+
     bool logging = false;
 
 public:
@@ -33,6 +35,7 @@ public:
 
     void init_interconnect(){ interconnects.resize((nproc+1)*(nproc+1)); }
 
+    void set_unidirectional(){ unidirectional = true; }
     void set_numa(){ numa = true; }
 
     void set_nproc(uint32_t nproc) {if(numa){this->nproc = nproc-1;}else{this->nproc = nproc;}}
@@ -57,6 +60,8 @@ public:
     void log_off() { logging = false; }
 
     int migratory = 0;
+
+    void write_stats(const char* outfile);
 
     bool check_directory(uint64_t addr);
     uint32_t num_proc(uint64_t addr);

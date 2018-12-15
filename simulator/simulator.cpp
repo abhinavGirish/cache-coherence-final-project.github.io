@@ -3,7 +3,7 @@
 
 #include "simulator.hpp"
 
-Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa)
+Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa, bool unidirectional)
     : table(OUTSANDING_REQUESTS), roi(roi), limit(limit)
 {
 
@@ -74,6 +74,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     if(interconnect == 1){
 	if(numa)
 		crossbar.set_numa();
+	if(unidirectional)
+		crossbar.set_unidirectional();
         crossbar.set_nproc(config.nproc);
         crossbar.set_receivers(receivers);
         crossbar.init_interconnect();
@@ -90,6 +92,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     else if(interconnect == 2){
 	if(numa)
 		ring.set_numa();
+	if(unidirectional)
+		ring.set_unidirectional();
         ring.set_nproc(config.nproc);
         ring.set_receivers(receivers);
         ring.init_interconnect();
@@ -103,6 +107,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     else if(interconnect == 3){
 	if(numa)
 		mesh.set_numa();
+	if(unidirectional)
+		mesh.set_unidirectional();
         mesh.set_nproc(config.nproc);
         mesh.set_receivers(receivers);
         mesh.init_interconnect();
@@ -117,6 +123,8 @@ Simulator::Simulator(const char *tracefile, CacheConfig config, bool roi, int li
     else if(interconnect == 4){
 	if(numa)
 		torus.set_numa();
+	if(unidirectional)
+		torus.set_unidirectional();
         torus.set_nproc(config.nproc);
         torus.set_receivers(receivers);
         torus.init_interconnect();

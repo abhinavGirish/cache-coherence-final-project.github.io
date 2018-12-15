@@ -47,6 +47,9 @@ const int BUS_DLY = 10;
 struct subinterconnect
 {
     std::queue<CMsg> incomming;
+    std::queue<bool> flip;
+    uint64_t hops = 0;
+    uint64_t contentions = 0;
     Countdown delay;
 };
 
@@ -63,7 +66,7 @@ private:
     std::vector<Cache *> cache_refs;
     std::map<uint64_t,uint64_t> directory;
     bool numa = false;
-
+    bool unidirectional = false;
     //Countdown delay;
     //Countdown acks;
     bool logging = false;
@@ -75,6 +78,7 @@ public:
     void init_interconnect(){ interconnects.resize((nproc+1)*(nproc+1)); }
 
     void set_numa(){numa=true;}
+    void set_unidirectional(){ unidirectional= true; }
     void set_nproc(uint32_t nproc) { if(numa){this->nproc = nproc-1;} else{this->nproc = nproc; }}
     void set_receivers(std::vector<Receiver*> receivers) { this->receivers = receivers; }
     uint64_t get_num_messages(){ return num_messages; }
@@ -95,6 +99,9 @@ public:
     void send_ack(CMsg msg);
     void log_on() { logging = true; }
     void log_off() { logging = false; }
+
+
+    void write_stats(const char* outfile);
 
     int migratory = 0;
 

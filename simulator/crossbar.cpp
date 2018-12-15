@@ -1,11 +1,15 @@
 
 #include <ostream>
 #include <iostream>
+#include <algorithm>
+#include <string>
+#include <fstream>
 
 #include "crossbar.hpp"
 #include "bus.hpp"
 #include "mig_const.hpp"
 #include "mig_memory.hpp"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // CMsg
@@ -92,9 +96,16 @@ void Crossbar::send(CMsg msg){
     if(numa && msg.sender == nproc+1)
 	sent = get_addr_proc(msg.addr);
     num_messages++;
-    if(interconnects[sent*(nproc+1) + recv].incomming.size()>0)
+    size_t index;
+    if(unidirectional)
+	index = sent*(nproc+1) + recv;
+    else
+	index = std::min(sent,recv)*(nproc+1) + std::max(sent,recv);
+    if(interconnects[index].incomming.size()>0){
+	interconnects[index].contentions++;
         contentions++;
-    interconnects[sent*(nproc+1) + recv].incomming.push(msg);
+    }
+    interconnects[index].incomming.push(msg);
 }
 
 void Crossbar::send_ack(CMsg msg)
@@ -135,6 +146,7 @@ void Crossbar::event()
             //assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
             //assert(msg.receiver <= nproc);
+	    interconnects[i].hops++;
 	    hops++;
             receivers[msg.receiver]->receive(msg);
         }
@@ -165,4 +177,18 @@ uint32_t Crossbar::num_proc(uint64_t addr){
         num = num >> 1;
     }
     return ans;
+}
+
+void Crossbar::write_stats(const char *outfile){
+	ofstream out;
+	out.open(outfile);
+	out << "sender receiver hops contentions\n";
+	for(size_t i=0;i<(nproc+1)*(nproc+1);i++){
+		uint64_t h = interconnects[i].hops;
+		uint64_t c = interconnects[i].contentions;
+		uint32_t s = i/(nproc+1);
+		uint32_t r = i%(nproc+1);
+		out << std::to_string(s) << " " << std::to_string(r) << " " << std::to_string(h) << " " << std::to_string(c) << "\n";
+	}
+	out.close();
 }

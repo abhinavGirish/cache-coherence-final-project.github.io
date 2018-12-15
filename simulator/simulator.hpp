@@ -52,7 +52,7 @@ private:
     bool done = false;
 
 public:
-    Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa);
+    Simulator(const char *tracefile, CacheConfig config, bool roi, int limit, bool mig, int interconnect, bool numa, bool unidirectional);
 
     void run(bool progbar);
     void run() { run(true); }
@@ -65,6 +65,17 @@ public:
     uint64_t get_contentions();
     uint64_t get_hops();
     bool is_roi() { return roi; }
+
+    void output_stats(const char *out){
+	if(interconnect == 1)
+		crossbar.write_stats(out);
+	else if(interconnect == 2)
+		ring.write_stats(out);
+	else if(interconnect == 3)
+		mesh.write_stats(out);
+	else if(interconnect == 4)
+		torus.write_stats(out);
+    }
 };
 
 

@@ -1,6 +1,9 @@
 
 #include <ostream>
 #include <iostream>
+#include <algorithm>
+#include <string>
+#include <fstream>
 
 #include "crossbar.hpp"
 #include "bus.hpp"
@@ -46,14 +49,24 @@ void Torus::broadcast(CMsg msg)
 }
 
 void Torus::send(CMsg msg){
-    size_t sent = msg.sender;
+    uint32_t sent = msg.sender;
     if(numa && msg.sender == nproc+1)
 	sent = get_addr_proc(msg.addr);
     num_messages++;
     uint32_t recv = next(sent,msg);
-    if(interconnects[sent*(nproc+1) + recv].incomming.size()>0)
+    size_t index;
+    if(unidirectional)
+	index = sent*(nproc+1) + recv;
+    else{
+	index = std::min(sent,recv)*(nproc+1) + std::max(sent,recv); 
+	if(recv<sent)
+		interconnects[index].flip.push(true);
+	else
+		interconnects[index].flip.push(false);
+    }
+    if(interconnects[index].incomming.size()>0)
         contentions++;
-    interconnects[sent*(nproc+1) + recv].incomming.push(msg); 
+    interconnects[index].incomming.push(msg);    
 }
 
 void Torus::send_ack(CMsg msg)
@@ -76,6 +89,9 @@ void Torus::send_ack(CMsg msg)
 void Torus::event()
 {
   for(size_t i=0;i<(nproc+1)*(nproc+1);i++){
+    uint32_t s = i/(nproc+1);
+    uint32_t r = i%(nproc+1);
+
     if(interconnects[i].delay.is_done())
     {
             if(interconnects[i].incomming.size() > 0)
@@ -85,14 +101,20 @@ void Torus::event()
     }
     else
     {
-        if(interconnects[i].delay.tick())
+        if(interconnects[i].delay.tick() || s==r)
         {
 	    hops++;
             CMsg msg = interconnects[i].incomming.front();
             assert(check_directory(msg.addr));
             interconnects[i].incomming.pop();
-            uint32_t s = i/(nproc+1);
-	    uint32_t r = i%(nproc+1);
+            if(!unidirectional){
+	    bool flipped = interconnects[i].flip.front();
+	    if(flipped){
+		uint32_t t = s;
+		s = r;
+		r = t;
+	    }
+	    interconnects[i].flip.pop();}
 	    size_t recv = msg.receiver;
 	    if(numa && msg.receiver == nproc + 1)
 		recv = get_addr_proc(msg.addr);
@@ -100,10 +122,20 @@ void Torus::event()
 		receivers[msg.receiver]->receive(msg);
 	    else{
 		uint32_t n = next(r,msg);
-		if(interconnects[r*(nproc+1)+n].incomming.size()>0)
+		size_t index;
+    		if(unidirectional)
+			index = r*(nproc+1) + n;
+    		else{
+			index = std::min(r,n)*(nproc+1) + std::max(r,n); 
+			if(n<r)
+				interconnects[index].flip.push(true);
+			else
+				interconnects[index].flip.push(false);
+		}
+		if(interconnects[index].incomming.size()>0)
                        contentions++;
-                interconnects[r*(nproc+1)+n].incomming.push(msg);
-
+                interconnects[index].incomming.push(msg);
+	
 	    } 
         }
     }
@@ -226,4 +258,18 @@ uint32_t Torus::num_proc(uint64_t addr){
         num = num >> 1;
     }
     return ans;
+}
+
+void Torus::write_stats(const char *outfile){
+	ofstream out;
+	out.open(outfile);
+	out << "sender receiver hops contentions\n";
+	for(size_t i=0;i<(nproc+1)*(nproc+1);i++){
+		uint64_t h = interconnects[i].hops;
+		uint64_t c = interconnects[i].contentions;
+		uint32_t s = i/(nproc+1);
+		uint32_t r = i%(nproc+1);
+		out << std::to_string(s) << " " << std::to_string(r) << " " << std::to_string(h) << " " << std::to_string(c) << "\n";
+	}
+	out.close();
 }
