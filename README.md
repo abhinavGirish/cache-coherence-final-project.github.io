@@ -1,4 +1,4 @@
-## Testing Cache Coherence Performance with Different Interconnect Networks
+## Testing Cache Coherence Simulation Performance with Different Interconnect Networks
 
 ### URL
 
