@@ -51,5 +51,7 @@ We will be using Elliot Lockerman's project from 15-618 2 years ago. Since his s
 
 ### Final Project Report
 
+For results and analysis of our experiment, please check out our report at the following link:
+
 [Link](https://docs.google.com/document/d/1xTGnUswOhQo_9LrA9M8nr_O6-lnXVfZjN3fjbsmtBQI/edit?usp=sharing)
 
