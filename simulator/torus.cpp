@@ -268,6 +268,8 @@ uint32_t Torus::num_proc(uint64_t addr){
 }
 
 bool Torus::broadcast_needed(uint64_t addr){
+	if(limited_pointers==0)
+		return false;
 	size_t count = 0;
 	uint64_t current_state = get_directory_info(addr);
         size_t iter = nproc;
