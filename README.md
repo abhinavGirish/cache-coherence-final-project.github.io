@@ -45,6 +45,11 @@ We will be using Elliot Lockerman's project from 15-618 2 years ago. Since his s
 - Week 5: Run tests on different traces to gather data
 - Week 6: Extend to the framework with other cache-coherence protocols and fix migratory cache coherence.
 
-### Checkpoint
+### Checkpoint Report
 
 [Link](https://docs.google.com/document/d/1ElAP2HD-56tSKEJwdNr6il35JUB-fCGlqjlQtVjIaS4/edit?usp=sharing)
+
+### Final Project Report
+
+[Link](https://docs.google.com/document/d/1xTGnUswOhQo_9LrA9M8nr_O6-lnXVfZjN3fjbsmtBQI/edit?usp=sharing)
+
